@@ -16,8 +16,8 @@
 @layer components {
   .section-shell { width: min(calc(100% - 2rem), 1340px); margin-inline: auto; }
   .section-space { padding-block: var(--space-section); }
-  .eyebrow { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-pine); }
-  .section-heading { font-family: var(--font-display); font-size: clamp(2.55rem, 5vw, 4.4rem); line-height: 0.94; letter-spacing: -0.055em; color: var(--color-ink); }
+  .eyebrow { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-pine); }
+  .section-heading { font-family: var(--font-display); font-size: clamp(2.55rem, 5vw, 4.4rem); line-height: 1.0; letter-spacing: -0.055em; color: var(--color-ink); }
   .skip-link { position: fixed; z-index: 50; top: 0.75rem; left: 0.75rem; transform: translateY(-160%); border-radius: var(--radius-control); background: var(--color-pine); padding: 0.7rem 0.9rem; color: white; font-size: 0.875rem; font-weight: 700; transition: transform var(--transition-base); }
   .skip-link:focus { transform: translateY(0); outline: 2px solid var(--color-brass); outline-offset: 3px; }
 }
@@ -48,4 +48,7 @@
 .cta-arch { position: absolute; width: 45%; aspect-ratio: 1; border: 1px solid rgba(245, 239, 226, .17); border-radius: 50%; }.cta-arch-one { top: -26%; left: -17%; }.cta-arch-two { right: -17%; bottom: -54%; width: 62%; }
 
 @media (min-width: 640px) { .section-shell { width: min(100% - 3.5rem, 1340px); } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  .group:hover .template-frame { transform: none; }
+}

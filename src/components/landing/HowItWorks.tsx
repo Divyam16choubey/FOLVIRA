@@ -14,7 +14,7 @@ export function HowItWorks() {
           {processSteps.map((step, index) => <Reveal key={step.number} delay={index * 0.05} className="grid gap-4 py-7 sm:grid-cols-[70px_1fr_auto] sm:items-start sm:gap-5">
             <span className="font-display text-3xl tracking-[-0.06em] text-brass">{step.number}</span>
             <div><h3 className="text-lg font-extrabold tracking-[-0.035em]">{step.title}</h3><p className="mt-2 max-w-[400px] text-sm leading-6 text-muted">{step.description}</p></div>
-            <span className="hidden size-8 items-center justify-center rounded-full border border-line text-xs font-bold text-pine sm:flex">0{index + 1}</span>
+            <span className="hidden size-8 items-center justify-center rounded-full border border-line text-xs font-bold text-pine sm:flex" aria-hidden="true">{step.number}</span>
           </Reveal>)}
         </div>
       </div>

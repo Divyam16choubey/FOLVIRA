@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { navigation } from '../../data/landing'
 import { scrollToSection } from '../../lib/scroll'
 import { Button } from '../common/Button'
@@ -8,6 +8,8 @@ import { CloseIcon, MenuIcon } from '../common/Icons'
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const reducedMotion = useReducedMotion()
+  const firstMenuItemRef = useRef<HTMLButtonElement>(null)
+
   const closeAndScroll = (target: string) => { setIsOpen(false); scrollToSection(target) }
 
   useEffect(() => {
@@ -19,6 +21,21 @@ export function Navbar() {
 
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [isOpen])
+
+  // Scroll lock when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
+
+  // Move focus into menu when it opens
+  useEffect(() => {
+    if (isOpen) {
+      // Wait for animation frame so the menu is mounted
+      const id = requestAnimationFrame(() => firstMenuItemRef.current?.focus())
+      return () => cancelAnimationFrame(id)
+    }
   }, [isOpen])
 
   return (
@@ -39,9 +56,9 @@ export function Navbar() {
         </button>
       </motion.nav>
       <AnimatePresence>
-        {isOpen && <motion.div id="mobile-navigation" initial={reducedMotion ? false : { opacity: 0, height: 0 }} animate={reducedMotion ? undefined : { opacity: 1, height: 'auto' }} exit={reducedMotion ? undefined : { opacity: 0, height: 0 }} className="absolute inset-x-0 top-full overflow-hidden border-y border-line bg-paper shadow-soft lg:hidden">
+        {isOpen && <motion.div id="mobile-navigation" initial={reducedMotion ? false : { opacity: 0, height: 0 }} animate={reducedMotion ? undefined : { opacity: 1, height: 'auto' }} exit={reducedMotion ? undefined : { opacity: 0, height: 0 }} className="absolute inset-x-0 top-full overflow-hidden border-b border-line bg-paper shadow-soft lg:hidden">
           <div className="section-shell flex flex-col py-3">
-            {navigation.map((item) => item.target ? <button key={item.label} onClick={() => closeAndScroll(item.target!)} className="py-3 text-left text-base font-bold text-ink transition-colors hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine">{item.label}</button> : <span key={item.label} className="py-3 text-left text-base font-bold text-muted/65" title="Planned for a future release">{item.label}<span className="sr-only"> (planned)</span></span>)}
+            {navigation.map((item, i) => item.target ? <button key={item.label} ref={i === 0 ? firstMenuItemRef : undefined} onClick={() => closeAndScroll(item.target!)} className="py-3 text-left text-base font-bold text-ink transition-colors hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine">{item.label}</button> : <span key={item.label} className="py-3 text-left text-base font-bold text-muted/65" title="Planned for a future release">{item.label}<span className="sr-only"> (planned)</span></span>)}
             <span className="py-3 text-left text-base font-bold text-muted/65" title="Account access is not part of this Phase 1 preview">Log in<span className="sr-only"> (planned)</span></span>
             <Button onClick={() => closeAndScroll('templates')} showArrow className="mt-3 w-full">Get started</Button>
           </div>

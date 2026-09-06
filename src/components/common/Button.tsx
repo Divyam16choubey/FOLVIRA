@@ -15,7 +15,7 @@ export function Button({ children, variant = 'primary', showArrow = false, class
   }
 
   return (
-    <button type={type} className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 py-3 text-sm font-bold tracking-[-0.01em] transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${styles[variant]} ${className}`} {...props}>
+    <button type={type} className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] px-5 py-3 text-sm font-bold tracking-[-0.01em] transition duration-200 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${styles[variant]} ${className}`} {...props}>
       {children}
       {showArrow && <ArrowRightIcon size={17} />}
     </button>

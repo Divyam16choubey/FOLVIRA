@@ -8,7 +8,7 @@ import { Templates } from './components/landing/Templates'
 
 function App() {
   return (
-    <div className="min-h-screen overflow-x-clip bg-canvas text-ink">
+    <div className="min-h-screen overflow-x-hidden bg-canvas text-ink">
       <a className="skip-link" href="#main-content">Skip to content</a>
       <Navbar />
       <main id="main-content" tabIndex={-1}>

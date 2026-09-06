@@ -14,7 +14,7 @@ export function Hero() {
           <motion.h1 initial={reducedMotion ? false : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.62, delay: 0.12, ease: [0.22, 1, 0.36, 1] }} className="font-display text-[clamp(3.6rem,7vw,6.4rem)] leading-[0.88] tracking-[-0.065em] text-ink">
             Your identity.<br />Your work.<br /><span className="text-brass">Your portfolio.</span>
           </motion.h1>
-          <motion.p initial={reducedMotion ? false : { opacity: 0, y: 15 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.55, delay: 0.24 }} className="mt-7 max-w-[460px] text-[1.04rem] leading-7 text-muted sm:text-lg sm:leading-8">
+          <motion.p initial={reducedMotion ? false : { opacity: 0, y: 15 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.55, delay: 0.24 }} className="mt-7 max-w-[460px] text-base leading-7 text-muted sm:text-lg sm:leading-8">
             Turn the experience you already have into a considered portfolio that feels unmistakably yours.
           </motion.p>
           <motion.div initial={reducedMotion ? false : { opacity: 0, y: 14 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.55, delay: 0.34 }} className="mt-8 flex flex-col gap-3">
