@@ -1,5 +1,23 @@
+# ── Build outputs ────────────────────────────────────────────────────────────
 node_modules
 dist
 .vite
 *.tsbuildinfo
+server/dist
+server/node_modules
 
+# ── Environment / secrets ─────────────────────────────────────────────────────
+# NEVER commit real environment files.
+.env
+.env.local
+.env.*.local
+server/.env
+server/.env.local
+server/.env.*.local
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea
+.vscode
