@@ -6,7 +6,7 @@ const footerColumns = [
 
 export function Footer() {
   return (
-    <footer id="footer" className="border-t border-line bg-[#f1eee6]">
+    <footer id="footer" className="border-t border-line bg-[var(--color-surface-muted)]">
       <div className="section-shell grid gap-12 py-14 md:grid-cols-[1.35fr_2fr] md:py-16">
         <div>
           <p className="font-display text-[2rem] leading-none tracking-[-0.06em] text-pine">FOLVIRA<span className="text-brass">.</span></p>

@@ -1,11 +1,13 @@
 import { ArchiveIcon, BrushIcon, ChartIcon, LaunchIcon, SparkIcon, WandIcon } from '../components/common/Icons'
 import type { Feature, ProcessStep, Template } from '../types/landing'
 
-export const navigation = [
+type NavigationItem = { label: string; target?: string }
+
+export const navigation: NavigationItem[] = [
   { label: 'Features', target: 'features' },
   { label: 'Templates', target: 'templates' },
   { label: 'How it works', target: 'how-it-works' },
-  { label: 'Pricing', target: 'final-cta' },
+  { label: 'Pricing' },
 ]
 
 export const features: Feature[] = [

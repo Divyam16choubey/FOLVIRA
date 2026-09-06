@@ -1,8 +1,8 @@
-import type { SVGProps } from 'react'
+import type { ReactNode, SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
-function Icon({ size = 20, children, ...props }: IconProps & { children: React.ReactNode }) {
+function Icon({ size = 20, children, ...props }: IconProps & { children: ReactNode }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{children}</svg>
 }
 

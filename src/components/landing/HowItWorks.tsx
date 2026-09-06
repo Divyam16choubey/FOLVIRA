@@ -3,7 +3,7 @@ import { Reveal } from '../common/Reveal'
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="section-shell py-20 sm:py-28">
+    <section id="how-it-works" className="section-shell section-space">
       <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
         <Reveal>
           <p className="eyebrow">A simpler way to begin</p>

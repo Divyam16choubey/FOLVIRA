@@ -3,7 +3,7 @@ import { Reveal } from '../common/Reveal'
 
 export function Templates() {
   return (
-    <section id="templates" className="border-y border-line bg-[#eeebe3] py-20 sm:py-28">
+    <section id="templates" className="section-space border-y border-line bg-[var(--color-surface-warm)]">
       <div className="section-shell">
         <Reveal className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="eyebrow">Four points of view</p><h2 className="section-heading mt-4">A place for every kind of <span className="text-brass">practice.</span></h2></div><p className="max-w-[330px] text-sm leading-6 text-muted">Static studies for now. A flexible template system is part of the product foundation ahead.</p></Reveal>
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -15,7 +15,7 @@ export function Templates() {
 }
 
 function TemplateFrame({ kind }: { kind: 'editorial' | 'minimal' | 'developer' | 'creative' }) {
-  return <div className={`template-frame template-${kind}`} aria-label={`${kind} portfolio template preview`}>
+  return <div className={`template-frame template-${kind}`} aria-hidden="true">
     <div className="template-top"><span>FOLVIRA</span><i /><i /><i /></div>
     {kind === 'editorial' && <><div className="template-editorial-copy"><span>HELLO, I'M</span><strong>Clara<br />Meyer</strong><em>Visual storyteller</em></div><div className="template-orb" /></>}
     {kind === 'minimal' && <><div className="template-minimal-copy"><strong>Ravi<br />Shah</strong><span>Designer and strategist.<br />Working across brands.</span></div><div className="template-minimal-line" /></>}
