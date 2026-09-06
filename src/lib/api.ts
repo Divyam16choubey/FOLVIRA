@@ -56,9 +56,45 @@ export const api = {
   post: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
 
+  put: <T>(path: string, body: unknown) =>
+    request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+
   delete: <T>(path: string, body?: unknown) =>
     request<T>(path, {
       method: 'DELETE',
       ...(body ? { body: JSON.stringify(body) } : {}),
     }),
+
+  /**
+   * Upload a file via multipart/form-data.
+   * Does NOT set Content-Type — lets the browser set the boundary.
+   */
+  upload: <T>(path: string, formData: FormData) =>
+    uploadRequest<T>(path, formData),
+}
+
+/**
+ * Separate request function for file uploads that doesn't set Content-Type.
+ */
+async function uploadRequest<T>(
+  path: string,
+  formData: FormData
+): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+    // No Content-Type header — browser sets multipart boundary automatically
+  })
+
+  const body = (await res.json()) as ApiResponse<T>
+
+  if (!res.ok || !body.success) {
+    throw new ApiError(
+      body.error ?? `Request failed with status ${res.status}`,
+      res.status
+    )
+  }
+
+  return body.data
 }

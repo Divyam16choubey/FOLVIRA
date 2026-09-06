@@ -12,6 +12,7 @@ import { env } from './config/env'
 import { generalLimiter } from './middleware/rateLimiter'
 import { errorHandler } from './middleware/errorHandler'
 import authRoutes from './routes/auth.routes'
+import profileRoutes from './routes/profile.routes'
 
 export function createApp() {
   const app = express()
@@ -47,6 +48,7 @@ export function createApp() {
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.use('/api/auth', authRoutes)
+  app.use('/api/profile', profileRoutes)
 
   // ── Health check (for deployment probes — no sensitive info) ─────────────
   app.get('/api/health', (_req, res) => {

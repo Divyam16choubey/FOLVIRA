@@ -21,6 +21,9 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage'
 import { DashboardPage } from './pages/app/DashboardPage'
+import { ProfileEditorPage } from './pages/app/ProfileEditorPage'
+import { ResumeImportPage } from './pages/app/ResumeImportPage'
+import { GitHubImportPage } from './pages/app/GitHubImportPage'
 
 function App() {
   return (
@@ -64,6 +67,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfileEditorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/import/resume"
+            element={
+              <ProtectedRoute>
+                <ResumeImportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/import/github"
+            element={
+              <ProtectedRoute>
+                <GitHubImportPage />
               </ProtectedRoute>
             }
           />
