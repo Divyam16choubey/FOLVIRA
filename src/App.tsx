@@ -24,6 +24,7 @@ import { DashboardPage } from './pages/app/DashboardPage'
 import { ProfileEditorPage } from './pages/app/ProfileEditorPage'
 import { ResumeImportPage } from './pages/app/ResumeImportPage'
 import { GitHubImportPage } from './pages/app/GitHubImportPage'
+import { AIIntelligencePage } from './pages/app/AIIntelligencePage'
 
 function App() {
   return (
@@ -91,6 +92,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <GitHubImportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/intelligence"
+            element={
+              <ProtectedRoute>
+                <AIIntelligencePage />
               </ProtectedRoute>
             }
           />

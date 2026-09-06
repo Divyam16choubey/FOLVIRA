@@ -59,9 +59,10 @@ export function errorHandler(
     message = 'Authentication token has expired'
   }
 
-  // In development, log the full error for debugging.
-  if (env.isDevelopment) {
-    console.error(`[Error] ${statusCode}:`, err)
+  // In development or test, log errors for debugging.
+  // Never logs secrets — only status codes and non-sensitive error messages.
+  if (env.isDevelopment || env.NODE_ENV === 'test') {
+    console.error(`[Error] ${statusCode}:`, err instanceof Error ? err.message : err)
   }
 
   res.status(statusCode).json({

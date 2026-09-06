@@ -13,6 +13,7 @@ import { generalLimiter } from './middleware/rateLimiter'
 import { errorHandler } from './middleware/errorHandler'
 import authRoutes from './routes/auth.routes'
 import profileRoutes from './routes/profile.routes'
+import aiRoutes from './routes/ai.routes'
 
 export function createApp() {
   const app = express()
@@ -49,6 +50,7 @@ export function createApp() {
   // ── Routes ────────────────────────────────────────────────────────────────
   app.use('/api/auth', authRoutes)
   app.use('/api/profile', profileRoutes)
+  app.use('/api/ai', aiRoutes)
 
   // ── Health check (for deployment probes — no sensitive info) ─────────────
   app.get('/api/health', (_req, res) => {

@@ -5,8 +5,8 @@
  */
 
 // ─── Data provenance ────────────────────────────────────────────────────────
-
-export type DataSourceType = 'manual' | 'resume' | 'github' | 'linkedin'
+// 'ai' added in Phase 4: content accepted from an AI suggestion.
+export type DataSourceType = 'manual' | 'resume' | 'github' | 'linkedin' | 'ai'
 
 // ─── Sub-document types ─────────────────────────────────────────────────────
 

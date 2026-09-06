@@ -16,7 +16,9 @@
 import mongoose, { Document, Schema, Types } from 'mongoose'
 
 // ─── Source enum (data provenance) ──────────────────────────────────────────
-export const DATA_SOURCES = ['manual', 'resume', 'github', 'linkedin'] as const
+// 'ai' is added in Phase 4: AI-generated content accepted by the user.
+// When a user accepts an AI suggestion, the updated field is marked source: 'ai'.
+export const DATA_SOURCES = ['manual', 'resume', 'github', 'linkedin', 'ai'] as const
 export type DataSourceType = (typeof DATA_SOURCES)[number]
 
 // ─── Sub-document interfaces ────────────────────────────────────────────────

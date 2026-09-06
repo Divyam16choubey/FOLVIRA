@@ -17,6 +17,7 @@ interface AppLayoutProps {
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard' },
   { label: 'Profile', path: '/profile' },
+  { label: 'Intelligence', path: '/profile/intelligence' },
 ]
 
 export function AppLayout({ children }: AppLayoutProps) {

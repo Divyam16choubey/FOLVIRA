@@ -16,23 +16,49 @@ const commonOptions = {
   },
 }
 
-/** Applied to login, signup, forgot-password: 10 attempts per 15 minutes per IP */
+/** Applied to login, signup, forgot-password: 10 attempts per 15 minutes per IP (50 in test) */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env['NODE_ENV'] === 'test' ? 50 : 10,
   ...commonOptions,
 })
 
-/** Applied to resend-verification and reset-password: 5 per 15 minutes */
+/** Applied to resend-verification and reset-password: 5 per 15 minutes (50 in test) */
 export const sensitiveActionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: process.env['NODE_ENV'] === 'test' ? 50 : 5,
   ...commonOptions,
 })
 
-/** Applied to all /api routes as a general backstop: 100 per 15 minutes */
+/** Applied to all /api routes as a general backstop: 100 per 15 minutes (1000 in test) */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: process.env['NODE_ENV'] === 'test' ? 1000 : 100,
+  ...commonOptions,
+})
+
+/**
+ * Applied to AI operations (analyze, improve, summarise).
+ * AI calls are expensive — 20 per hour per IP is permissive for development
+ * but limits accidental/abusive runaway usage.
+ * In test environment the limit is relaxed to 200 to prevent test exhaustion.
+ */
+export const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,   // 1 hour
+  max: process.env['NODE_ENV'] === 'test' ? 500 : 20,
+  ...commonOptions,
+  message: {
+    success: false,
+    error: 'Too many AI requests. Please wait before running another analysis.',
+  },
+})
+
+/**
+ * Applied to suggestion accept/reject (lighter operations — no AI call).
+ * More permissive: 60 per 15 minutes.
+ */
+export const suggestionActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
   ...commonOptions,
 })
