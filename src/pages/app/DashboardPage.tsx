@@ -16,6 +16,8 @@ import { ProfileCompleteness } from '../../components/profile/ProfileCompletenes
 import { useAuth, ApiError } from '../../context/AuthContext'
 import { api } from '../../lib/api'
 import type { Profile, DataSource } from '../../types/profile'
+import type { Portfolio } from '../../types/portfolio'
+import { TEMPLATE_LABELS } from '../../types/portfolio'
 
 export function DashboardPage() {
   const { user } = useAuth()
@@ -26,6 +28,9 @@ export function DashboardPage() {
   const [completeness, setCompleteness] = useState(0)
   const [dataSources, setDataSources] = useState<DataSource[]>([])
   const [loadingData, setLoadingData] = useState(true)
+
+  // Portfolio state (Phase 5)
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([])
 
   // Account management state (Phase 2)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -45,6 +50,14 @@ export function DashboardPage() {
         setProfile(profileRes.profile)
         setCompleteness(profileRes.completeness)
         setDataSources(sourcesRes.sources)
+
+        // Load portfolios — fail silently so dashboard always renders
+        try {
+          const portRes = await api.get<{ portfolios: Portfolio[] }>('/api/portfolios')
+          setPortfolios(portRes.portfolios)
+        } catch {
+          // Portfolio list is non-critical for the dashboard
+        }
       } catch {
         // Fallback: If profile fetch fails, dashboard still loads
       } finally {
@@ -145,6 +158,11 @@ export function DashboardPage() {
                 Edit Profile
               </Button>
             </Link>
+            <Link to="/portfolio">
+              <Button variant="secondary" className="px-4 py-2.5 text-xs">
+                My Portfolio
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -155,6 +173,44 @@ export function DashboardPage() {
             profile={profile || undefined}
             showDetails={!loadingData}
           />
+        </div>
+
+        {/* Portfolio Card (Phase 5) */}
+        <div className="mb-10 rounded-card border border-line bg-paper p-6 shadow-soft">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="eyebrow mb-1">Portfolio Generator</p>
+              <h2 className="font-display text-xl tracking-[-0.03em] text-ink">
+                {portfolios.length === 0
+                  ? 'Create your first portfolio'
+                  : `${portfolios.length} portfolio${portfolios.length === 1 ? '' : 's'}`}
+              </h2>
+              <p className="mt-1 text-xs text-muted max-w-md">
+                {portfolios.length === 0
+                  ? 'Turn your profile data into a shareable portfolio. Choose a template, configure sections, and preview it live.'
+                  : portfolios.map((p) => (
+                      <span key={p._id} className="mr-3 inline-block">
+                        <span className="font-semibold text-ink">{p.name}</span>
+                        <span className="ml-1 text-muted/70">({TEMPLATE_LABELS[p.template]})</span>
+                      </span>
+                    ))}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {portfolios.length > 0 && (
+                <Link to={`/portfolio/${portfolios[0]._id}`}>
+                  <Button className="px-4 py-2 text-xs">
+                    Open Editor
+                  </Button>
+                </Link>
+              )}
+              <Link to="/portfolio">
+                <Button variant="secondary" className="px-4 py-2 text-xs">
+                  {portfolios.length === 0 ? 'Get Started' : 'View All'}
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Grid: Ingestion Sources & Profile Sections */}
