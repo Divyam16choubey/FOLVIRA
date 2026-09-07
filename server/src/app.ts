@@ -14,6 +14,7 @@ import { errorHandler } from './middleware/errorHandler'
 import authRoutes from './routes/auth.routes'
 import profileRoutes from './routes/profile.routes'
 import aiRoutes from './routes/ai.routes'
+import portfolioRoutes from './routes/portfolio.routes'
 
 export function createApp() {
   const app = express()
@@ -32,7 +33,7 @@ export function createApp() {
     cors({
       origin: env.FRONTEND_URL,
       credentials: true, // Required: allows cookies to be sent cross-origin
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     })
   )
@@ -51,6 +52,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes)
   app.use('/api/profile', profileRoutes)
   app.use('/api/ai', aiRoutes)
+  app.use('/api/portfolios', portfolioRoutes)
 
   // ── Health check (for deployment probes — no sensitive info) ─────────────
   app.get('/api/health', (_req, res) => {
