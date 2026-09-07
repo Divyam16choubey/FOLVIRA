@@ -15,9 +15,10 @@ interface AppLayoutProps {
 }
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Profile', path: '/profile' },
+  { label: 'Dashboard',    path: '/dashboard' },
+  { label: 'Profile',      path: '/profile' },
   { label: 'Intelligence', path: '/profile/intelligence' },
+  { label: 'Portfolio',    path: '/portfolio' },
 ]
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -51,7 +52,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
             <nav className="hidden items-center gap-1 sm:flex" aria-label="Main navigation">
               {NAV_ITEMS.map((item) => {
-                const isActive = location.pathname === item.path
+                const isActive = location.pathname === item.path ||
+                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path + '/'))
                 return (
                   <Link
                     key={item.path}
