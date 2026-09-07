@@ -25,6 +25,9 @@ import { ProfileEditorPage } from './pages/app/ProfileEditorPage'
 import { ResumeImportPage } from './pages/app/ResumeImportPage'
 import { GitHubImportPage } from './pages/app/GitHubImportPage'
 import { AIIntelligencePage } from './pages/app/AIIntelligencePage'
+import { PortfolioListPage } from './pages/portfolio/PortfolioListPage'
+import { PortfolioWorkspacePage } from './pages/portfolio/PortfolioWorkspacePage'
+import { PortfolioPreviewPage } from './pages/portfolio/PortfolioPreviewPage'
 
 function App() {
   return (
@@ -100,6 +103,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <AIIntelligencePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute>
+                <PortfolioListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio/:id"
+            element={
+              <ProtectedRoute>
+                <PortfolioWorkspacePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio/:id/preview"
+            element={
+              <ProtectedRoute>
+                <PortfolioPreviewPage />
               </ProtectedRoute>
             }
           />
