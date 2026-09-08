@@ -2,6 +2,13 @@
  * Portfolio TypeScript types for the FOLVIRA frontend.
  * These mirror the backend Portfolio model.
  * Never import server-side types directly into the frontend.
+ *
+ * Phase 6 additions:
+ *   - PortfolioOverrides
+ *   - PortfolioSelections
+ *   - PublishedSnapshot
+ *   - Portfolio.status / lastPublishedAt / publishedSnapshot
+ *   - resolveForPreview() — client-side override+selection resolver for live preview
  */
 
 // ─── Template types ───────────────────────────────────────────────────────────
@@ -53,7 +60,34 @@ export interface PortfolioSeo {
 
 // ─── Portfolio ────────────────────────────────────────────────────────────────
 
-export type PortfolioStatus = 'draft'
+export type PortfolioStatus = 'draft' | 'published'
+
+// Phase 6: Controlled overrides of master Profile fields
+export interface PortfolioOverrides {
+  headline?: string
+  about?: string
+  location?: string
+  website?: string
+  socialLinks?: Array<{ platform: string; url: string }>
+}
+
+// Phase 6: Which profile entries are shown in this portfolio
+export interface PortfolioSelections {
+  featuredProjects: string[]       // ObjectId strings — empty = show all
+  visibleExperience: string[]
+  visibleEducation: string[]
+  visibleCertifications: string[]
+}
+
+// Phase 6: Immutable published snapshot
+export interface PublishedSnapshot {
+  template: PortfolioTemplate
+  sections: PortfolioSection[]
+  theme: PortfolioTheme
+  seo: PortfolioSeo
+  profile: RendererProfile
+  publishedAt: string
+}
 
 export interface Portfolio {
   _id: string
@@ -64,8 +98,12 @@ export interface Portfolio {
   template: PortfolioTemplate
   sections: PortfolioSection[]
   theme: PortfolioTheme
+  overrides: PortfolioOverrides        // Phase 6
+  selections: PortfolioSelections      // Phase 6
   seo: PortfolioSeo
-  status: PortfolioStatus
+  status: PortfolioStatus              // Phase 6
+  lastPublishedAt?: string             // Phase 6
+  publishedSnapshot?: PublishedSnapshot // Phase 6 — immutable
   createdAt: string
   updatedAt: string
 }
@@ -290,4 +328,60 @@ export const DEFAULT_THEME: PortfolioTheme = {
   background: 'ivory',
   radius: 'minimal',
   animation: 'subtle',
+}
+
+// ─── Phase 6: Client-side preview resolver ────────────────────────────────────
+
+/**
+ * Resolve overrides + selections into a RendererProfile for live preview.
+ * Mirrors the server-side resolvePortfolioForRendering() in portfolio.service.ts.
+ * Used by the editor to update preview immediately without an extra API call.
+ *
+ * Rules:
+ *   1. Start with masterProfile (all entries from master Profile).
+ *   2. Apply overrides: headline / about / location / website / socialLinks.
+ *   3. Filter selections if non-empty (empty = show all from master Profile).
+ */
+export function resolveForPreview(
+  masterProfile: RendererProfile,
+  overrides: PortfolioOverrides,
+  selections: PortfolioSelections
+): RendererProfile {
+  const resolved: RendererProfile = {
+    ...masterProfile,
+    headline:  overrides.headline  !== undefined ? overrides.headline  : masterProfile.headline,
+    about:     overrides.about     !== undefined ? overrides.about     : masterProfile.about,
+    location:  overrides.location  !== undefined ? overrides.location  : masterProfile.location,
+    website:   overrides.website   !== undefined ? overrides.website   : masterProfile.website,
+    socialLinks: overrides.socialLinks !== undefined
+      ? overrides.socialLinks.map((sl, i) => ({ _id: `override-${i}`, platform: sl.platform, url: sl.url }))
+      : masterProfile.socialLinks,
+  }
+
+  if (selections.featuredProjects.length > 0) {
+    const ids = new Set(selections.featuredProjects)
+    resolved.projects = masterProfile.projects.filter((p) => ids.has(p._id))
+  }
+  if (selections.visibleExperience.length > 0) {
+    const ids = new Set(selections.visibleExperience)
+    resolved.experience = masterProfile.experience.filter((e) => ids.has(e._id))
+  }
+  if (selections.visibleEducation.length > 0) {
+    const ids = new Set(selections.visibleEducation)
+    resolved.education = masterProfile.education.filter((e) => ids.has(e._id))
+  }
+  if (selections.visibleCertifications.length > 0) {
+    const ids = new Set(selections.visibleCertifications)
+    resolved.certifications = masterProfile.certifications.filter((c) => ids.has(c._id))
+  }
+
+  return resolved
+}
+
+// ─── Phase 6: Publish validation result ──────────────────────────────────────
+
+export interface PublishValidationResult {
+  valid: boolean
+  errors: string[]
+  warnings: string[]
 }

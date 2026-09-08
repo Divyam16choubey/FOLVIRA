@@ -62,3 +62,18 @@ export const suggestionActionLimiter = rateLimit({
   max: 60,
   ...commonOptions,
 })
+
+/**
+ * Phase 6: Applied to portfolio publish operations.
+ * Publishing is expensive (profile resolution, snapshot creation).
+ * 10 publishes per hour per IP is generous for legitimate use.
+ */
+export const publishLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: process.env['NODE_ENV'] === 'test' ? 200 : 10,
+  ...commonOptions,
+  message: {
+    success: false,
+    error: 'Too many publish requests. Please wait before publishing again.',
+  },
+})
