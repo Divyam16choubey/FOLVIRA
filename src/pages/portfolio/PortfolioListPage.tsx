@@ -265,9 +265,29 @@ export function PortfolioListPage() {
                       </span>
                     </div>
                     <p className="text-xs text-muted font-mono">{p.slug}</p>
-                    <p className="text-xs text-muted">
-                      {visibleCount} of {p.sections.length} sections visible
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted">
+                        {visibleCount} of {p.sections.length} sections visible
+                      </p>
+                      {/* Phase 6: Published status badge */}
+                      {p.status === 'published' ? (
+                        <span className="rounded-full bg-[#edf4f1] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-pine">
+                          Published
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-[#f1eee6] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-muted">
+                          Draft
+                        </span>
+                      )}
+                    </div>
+                    {p.lastPublishedAt && (
+                      <p className="text-[10px] text-muted">
+                        Last published{' '}
+                        {new Date(p.lastPublishedAt).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })}
+                      </p>
+                    )}
                   </div>
 
                   {/* Card actions */}

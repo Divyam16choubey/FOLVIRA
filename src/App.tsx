@@ -28,6 +28,7 @@ import { AIIntelligencePage } from './pages/app/AIIntelligencePage'
 import { PortfolioListPage } from './pages/portfolio/PortfolioListPage'
 import { PortfolioWorkspacePage } from './pages/portfolio/PortfolioWorkspacePage'
 import { PortfolioPreviewPage } from './pages/portfolio/PortfolioPreviewPage'
+import { PortfolioEditorPage } from './pages/portfolio/PortfolioEditorPage'
 
 function App() {
   return (
@@ -106,6 +107,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/*
+           * ── Portfolio routes ────────────────────────────────────────────
+           * /portfolio       → list + create
+           * /portfolio/:id   → Phase 6 visual editor (replaces Phase 5 workspace)
+           * /portfolio/:id/preview → full-screen preview / published view
+           */}
           <Route
             path="/portfolio"
             element={
@@ -118,7 +125,7 @@ function App() {
             path="/portfolio/:id"
             element={
               <ProtectedRoute>
-                <PortfolioWorkspacePage />
+                <PortfolioEditorPage />
               </ProtectedRoute>
             }
           />

@@ -1,13 +1,14 @@
 /**
  * PortfolioPreviewPage — Full-screen portfolio preview at /portfolio/:id/preview
  *
- * Renders the portfolio exactly as it will appear — no AppLayout header,
- * no sidebar controls. Used for:
- *   - "Open full preview" link from the workspace
- *   - Future public portfolio URL (Phase 6)
+ * Phase 6 behaviour:
+ *   - If the portfolio has a publishedSnapshot, renders the IMMUTABLE snapshot.
+ *   - If no snapshot exists yet (status = 'draft'), renders the current draft.
+ *   - A "Back to Editor" bar is shown at top (hidden on print).
  *
- * Redirects to /login if not authenticated.
- * Only loads the user's own portfolio (ownership enforced server-side).
+ * This page always requires authentication (owner only).
+ * The published snapshot profile is the resolved version that was frozen
+ * at publish time — it does NOT change when the master Profile changes.
  */
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -23,6 +24,7 @@ export function PortfolioPreviewPage() {
   const [profile, setProfile] = useState<RendererProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [usingSnapshot, setUsingSnapshot] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -36,7 +38,16 @@ export function PortfolioPreviewPage() {
         `/api/portfolios/${id}`
       )
       setPortfolio(res.portfolio)
-      setProfile(res.profile)
+
+      // Phase 6: use the published snapshot profile if available — it's immutable
+      if (res.portfolio.publishedSnapshot?.profile) {
+        setProfile(res.portfolio.publishedSnapshot.profile as RendererProfile)
+        setUsingSnapshot(true)
+      } else {
+        // Fall back to live draft profile (no snapshot yet)
+        setProfile(res.profile)
+        setUsingSnapshot(false)
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         navigate('/login', { replace: true })
@@ -50,6 +61,18 @@ export function PortfolioPreviewPage() {
     }
   }
 
+  // When viewing the snapshot, use snapshot template/sections/theme
+  const renderPortfolio: Portfolio | null = portfolio
+    ? usingSnapshot && portfolio.publishedSnapshot
+      ? {
+          ...portfolio,
+          template:  portfolio.publishedSnapshot.template,
+          sections:  portfolio.publishedSnapshot.sections,
+          theme:     portfolio.publishedSnapshot.theme,
+        }
+      : portfolio
+    : null
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-canvas">
@@ -58,7 +81,7 @@ export function PortfolioPreviewPage() {
     )
   }
 
-  if (error || !portfolio) {
+  if (error || !renderPortfolio) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas">
         <p className="text-sm font-semibold text-red-700">{error || 'Portfolio not found.'}</p>
@@ -72,15 +95,37 @@ export function PortfolioPreviewPage() {
     )
   }
 
+  const snapshotDate = portfolio?.publishedSnapshot?.publishedAt
+    ? new Date(portfolio.publishedSnapshot.publishedAt).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      })
+    : null
+
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* Back to editor bar — unobtrusive, only shown in preview mode */}
+      {/* Preview / published bar */}
       <div
         className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b border-black/10 bg-black/80 px-4 py-2 backdrop-blur-sm print:hidden"
         role="banner"
         aria-label="Preview bar"
       >
-        <span className="text-xs font-bold text-white/80">Preview mode</span>
+        <div className="flex items-center gap-3">
+          {usingSnapshot ? (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-white/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden="true" />
+              Published snapshot
+              {snapshotDate && (
+                <span className="font-normal text-white/50 ml-1">{snapshotDate}</span>
+              )}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-[#f5d87a]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#f5d87a]" aria-hidden="true" />
+              Draft preview — not yet published
+            </span>
+          )}
+        </div>
         <Link
           to={`/portfolio/${id}`}
           className="rounded-[var(--radius-control)] bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
@@ -89,7 +134,7 @@ export function PortfolioPreviewPage() {
         </Link>
       </div>
 
-      <PortfolioRenderer portfolio={portfolio} profile={profile} />
+      <PortfolioRenderer portfolio={renderPortfolio} profile={profile} />
     </div>
   )
 }

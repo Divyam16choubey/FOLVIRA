@@ -35,6 +35,7 @@ import {
   toSafePortfolio,
   toRendererProfile,
   normalizeSlug,
+  resolvePortfolioForRendering,
 } from '../services/portfolio.service'
 import { createError } from '../middleware/errorHandler'
 import type { PortfolioTemplate, IPortfolioTheme, IPortfolioSection } from '../models/Portfolio'
@@ -212,7 +213,6 @@ export async function getEditorDataHandler(
     if (!data) { res.status(404).json({ success: false, error: 'Portfolio not found.' }); return }
 
     const { portfolio, profile } = data
-    const { resolvePortfolioForRendering } = await import('../services/portfolio.service')
     const resolvedProfile = resolvePortfolioForRendering(portfolio, profile)
 
     res.json({
@@ -297,6 +297,14 @@ export async function validatePublishHandler(
   try {
     assertValidation(req)
     const id = paramId(req)
+
+    // Check ownership first — return 404 (not a validation result) if not owned
+    const portfolio = await getPortfolioById(req.userId!, id)
+    if (!portfolio) {
+      res.status(404).json({ success: false, error: 'Portfolio not found.' })
+      return
+    }
+
     const result = await validatePublish(req.userId!, id)
     res.json({ success: true, data: result })
   } catch (err) { next(err) }
@@ -313,19 +321,36 @@ export async function publishPortfolioHandler(
     assertValidation(req)
     const id = paramId(req)
 
+    // Explicit ownership check — return 404 before any processing
+    const owned = await getPortfolioById(req.userId!, id)
+    if (!owned) {
+      res.status(404).json({ success: false, error: 'Portfolio not found.' })
+      return
+    }
+
     let result: Awaited<ReturnType<typeof publishPortfolio>>
     try {
       result = await publishPortfolio(req.userId!, id)
     } catch (err) {
-      // Validation failure (422) — return structured errors, not a 500
-      if (err instanceof Error && (err as { statusCode?: number }).statusCode === 422) {
-        const validationErrors = (err as { validationErrors?: string[] }).validationErrors ?? [err.message]
-        res.status(422).json({
-          success: false,
-          error: err.message,
-          data: { validationErrors },
-        })
-        return
+      if (err instanceof Error) {
+        const code = (err as { statusCode?: number }).statusCode
+        const msg = err.message
+
+        // Portfolio not found — ownership failure — return 404
+        if (code === 404 || msg === 'Portfolio not found.' || msg === 'Linked profile not found.') {
+          res.status(404).json({ success: false, error: msg })
+          return
+        }
+        // Validation failure (422) — return structured errors
+        if (code === 422) {
+          const validationErrors = (err as { validationErrors?: string[] }).validationErrors ?? [msg]
+          res.status(422).json({
+            success: false,
+            error: msg,
+            data: { validationErrors },
+          })
+          return
+        }
       }
       throw err
     }
