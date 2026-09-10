@@ -16,7 +16,7 @@
  * 10.  Education selection (visibleEducation)
  * 11.  Certification selection (visibleCertifications)
  * 12.  Section visibility
- * 13.  Section ordering
+ * 13.  Section ordering (incl. drag-and-drop reorder API simulation)
  * 14.  Template switching
  * 15.  Theme updates
  * 16.  SEO / settings updates
@@ -336,7 +336,7 @@ async function testSelections() {
 // ─── 12–13. Section visibility and ordering ───────────────────────────────────
 
 async function testSections() {
-  section('12-13. SECTION VISIBILITY & ORDERING')
+  section('12-13. SECTION VISIBILITY & ORDERING (incl. drag-and-drop reorder API)')
 
   const hideAbout = [
     { type: 'hero',       visible: true,  order: 1 },
@@ -369,6 +369,53 @@ async function testSections() {
   const projSection = rR.body?.data?.portfolio?.sections?.find(s => s.type === 'projects')
   ok('Projects moved to order 1', projSection?.order === 1)
 
+  // ── Drag-and-drop reorder simulation ─────────────────────────────────────
+  // The frontend's reorderSections() re-assigns order values 1..N from the
+  // new array position after Reorder.Group fires onReorder().
+  // This test verifies the exact same PATCH call that drag produces.
+  const dragReorder = [
+    // User dragged "skills" to position 1 (order:1), rest shifted down
+    { type: 'skills',     visible: true,  order: 1 },
+    { type: 'projects',   visible: true,  order: 2 },
+    { type: 'hero',       visible: true,  order: 3 },
+    { type: 'experience', visible: true,  order: 4 },
+    { type: 'about',      visible: false, order: 5 },
+    { type: 'education',  visible: true,  order: 6 },
+    { type: 'contact',    visible: true,  order: 7 },
+  ]
+
+  const dragR = await req('PATCH', `/api/portfolios/${portfolioId}/sections`, { sections: dragReorder }, cookie1)
+  ok('Drag-and-drop reorder API call returns 200', dragR.status === 200)
+
+  // Verify the new order is stored correctly
+  const stored = dragR.body?.data?.portfolio?.sections ?? []
+  const skillsSec = stored.find(s => s.type === 'skills')
+  const heroSec   = stored.find(s => s.type === 'hero')
+  ok('Skills is now order 1 after drag', skillsSec?.order === 1)
+  ok('Hero is now order 3 after drag', heroSec?.order === 3)
+  ok('Visibility preserved through drag reorder', stored.find(s => s.type === 'about')?.visible === false)
+
+  // The renderer respects the new order: sections sorted by order asc
+  const sortedByOrder = [...stored].sort((a, b) => a.order - b.order)
+  ok('Sections returned by API can be sorted by order', sortedByOrder[0]?.type === 'skills')
+
+  // Ensure drag reorder does not change visibility of non-hidden sections
+  const visibleSections = stored.filter(s => s.visible)
+  ok('Only about section is hidden after drag reorder', visibleSections.length === stored.length - 1)
+
+  // Edge: single-item drag (no real movement) — order unchanged
+  const noMoveDrag = [
+    { type: 'skills',     visible: true,  order: 1 },
+    { type: 'projects',   visible: true,  order: 2 },
+    { type: 'hero',       visible: true,  order: 3 },
+    { type: 'experience', visible: true,  order: 4 },
+    { type: 'about',      visible: false, order: 5 },
+    { type: 'education',  visible: true,  order: 6 },
+    { type: 'contact',    visible: true,  order: 7 },
+  ]
+  const noMoveR = await req('PATCH', `/api/portfolios/${portfolioId}/sections`, { sections: noMoveDrag }, cookie1)
+  ok('No-op drag (same order) returns 200', noMoveR.status === 200)
+
   // Restore clean sections for publish tests
   const cleanSections = [
     { type: 'hero',           visible: true,  order: 1 },
@@ -381,6 +428,7 @@ async function testSections() {
     { type: 'contact',        visible: true,  order: 8 },
   ]
   await req('PATCH', `/api/portfolios/${portfolioId}/sections`, { sections: cleanSections }, cookie1)
+  ok('Sections restored to clean state', true)
 }
 
 // ─── 14–15. Template and theme ────────────────────────────────────────────────

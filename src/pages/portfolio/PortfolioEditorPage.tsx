@@ -24,6 +24,7 @@
  */
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Reorder } from 'framer-motion'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { Button } from '../../components/common/Button'
 import { PortfolioRenderer } from '../../components/portfolio/PortfolioRenderer'
@@ -357,6 +358,19 @@ export function PortfolioEditorPage() {
       if (i === idx + 1) return { ...s, order: sorted[idx]!.order }
       return s
     })
+    setLocalPortfolio({ ...localPortfolio, sections: updated })
+    markDirty()
+  }
+
+  /**
+   * Called by Reorder.Group when the user finishes a drag gesture.
+   * `reordered` is the full sections array in its new order.
+   * We reassign `order` values (1-based) from the new array position.
+   * This is the same ordering scheme the existing PATCH /sections endpoint uses.
+   */
+  function reorderSections(reordered: typeof sortedSections) {
+    if (!localPortfolio) return
+    const updated = reordered.map((s, i) => ({ ...s, order: i + 1 }))
     setLocalPortfolio({ ...localPortfolio, sections: updated })
     markDirty()
   }
@@ -717,24 +731,77 @@ export function PortfolioEditorPage() {
                     Section Visibility & Order
                   </p>
                   <p className="mt-1 text-xs text-muted">
-                    Toggle sections on/off. Use arrows to reorder. Preview updates instantly; click Save to persist.
+                    Drag to reorder. Toggle to show/hide. Preview updates instantly; click Save to persist.
                   </p>
                 </div>
-                <ul className="space-y-2" aria-label="Portfolio sections">
+                {/*
+                 * Reorder.Group provides drag-and-drop reordering.
+                 * framer-motion is already a project dependency.
+                 * `values` must be the same array reference used by Reorder.Item `value` props.
+                 * `onReorder` fires with the new sorted array after each drag.
+                 * Arrow buttons remain as keyboard/accessibility fallback.
+                 */}
+                <Reorder.Group
+                  axis="y"
+                  values={sortedSections}
+                  onReorder={reorderSections}
+                  className="space-y-2"
+                  aria-label="Portfolio sections — drag to reorder"
+                  as="ul"
+                >
                   {sortedSections.map((section, idx) => (
-                    <li
+                    <Reorder.Item
                       key={section.type}
-                      className="flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2.5"
+                      value={section}
+                      as="li"
+                      className="flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-paper px-3 py-2.5 cursor-default select-none"
+                      /* Subtle lift on drag — within FOLVIRA's "subtle motion" theme */
+                      whileDrag={{
+                        scale: 1.02,
+                        boxShadow: '0 8px 24px rgba(20,30,25,0.12)',
+                        zIndex: 10,
+                        position: 'relative',
+                      }}
+                      /* Disable framer-motion layout animation on initial mount */
+                      layout="position"
+                      transition={{ duration: 0.15 }}
                     >
+                      {/* ── Drag handle ──────────────────────────────── */}
+                      {/*
+                       * The grip dots are the drag trigger area.
+                       * aria-hidden="true" on the SVG — the surrounding li's
+                       * aria-label from Reorder.Group + the text label describe
+                       * the item. Screen readers use the arrow buttons for reorder.
+                       */}
+                      <span
+                        className="shrink-0 cursor-grab active:cursor-grabbing touch-none text-muted hover:text-ink transition-colors"
+                        aria-hidden="true"
+                        title="Drag to reorder"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                          <circle cx="4" cy="3" r="1.2" />
+                          <circle cx="4" cy="7" r="1.2" />
+                          <circle cx="4" cy="11" r="1.2" />
+                          <circle cx="10" cy="3" r="1.2" />
+                          <circle cx="10" cy="7" r="1.2" />
+                          <circle cx="10" cy="11" r="1.2" />
+                        </svg>
+                      </span>
+
+                      {/* ── Visibility toggle ─────────────────────────── */}
                       <Toggle
                         checked={section.visible}
                         onChange={() => toggleSection(section.type)}
                         label={`${section.visible ? 'Hide' : 'Show'} ${SECTION_LABELS[section.type]}`}
                       />
+
+                      {/* ── Section label ─────────────────────────────── */}
                       <span className={`flex-1 text-xs font-semibold ${section.visible ? 'text-ink' : 'text-muted'}`}>
                         {SECTION_LABELS[section.type]}
                       </span>
-                      <div className="flex gap-0.5">
+
+                      {/* ── Arrow buttons (keyboard / accessibility fallback) ── */}
+                      <div className="flex gap-0.5" aria-label={`Reorder ${SECTION_LABELS[section.type]}`}>
                         <button
                           type="button"
                           onClick={() => moveSectionUp(section.type)}
@@ -742,7 +809,9 @@ export function PortfolioEditorPage() {
                           aria-label={`Move ${SECTION_LABELS[section.type]} up`}
                           className="rounded p-1 text-muted hover:text-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-1 focus-visible:outline-pine"
                         >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 2L10 8H2Z" /></svg>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+                            <path d="M6 2L10 8H2Z" />
+                          </svg>
                         </button>
                         <button
                           type="button"
@@ -751,12 +820,14 @@ export function PortfolioEditorPage() {
                           aria-label={`Move ${SECTION_LABELS[section.type]} down`}
                           className="rounded p-1 text-muted hover:text-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-1 focus-visible:outline-pine"
                         >
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 10L2 4H10Z" /></svg>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+                            <path d="M6 10L2 4H10Z" />
+                          </svg>
                         </button>
                       </div>
-                    </li>
+                    </Reorder.Item>
                   ))}
-                </ul>
+                </Reorder.Group>
               </div>
             )}
 
