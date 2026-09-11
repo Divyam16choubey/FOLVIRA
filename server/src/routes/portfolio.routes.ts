@@ -41,6 +41,8 @@ import {
   updateSelectionsHandler,
   validatePublishHandler,
   publishPortfolioHandler,
+  // Phase 7
+  unpublishPortfolioHandler,
 } from '../controllers/portfolio.controller'
 import {
   PORTFOLIO_TEMPLATES,
@@ -197,5 +199,8 @@ router.patch('/:id/selections', [...idParam, ...selectionsValidation], updateSel
 // Phase 6: Publish (validate-then-publish route must be before /publish to avoid collision)
 router.get('/:id/publish/validate', idParam, validatePublishHandler)
 router.post('/:id/publish', [...idParam], publishLimiter, publishPortfolioHandler)
+
+// Phase 7: Unpublish
+router.post('/:id/unpublish', idParam, unpublishPortfolioHandler)
 
 export default router

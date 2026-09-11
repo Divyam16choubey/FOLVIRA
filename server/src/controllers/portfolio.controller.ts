@@ -36,6 +36,9 @@ import {
   toRendererProfile,
   normalizeSlug,
   resolvePortfolioForRendering,
+  getPublishedPortfolioBySlug,
+  toPublicPortfolio,
+  unpublishPortfolio,
 } from '../services/portfolio.service'
 import { createError } from '../middleware/errorHandler'
 import type { PortfolioTemplate, IPortfolioTheme, IPortfolioSection } from '../models/Portfolio'
@@ -364,4 +367,96 @@ export async function publishPortfolioHandler(
       },
     })
   } catch (err) { next(err) }
+}
+
+// ─── Phase 7: Public portfolio access ────────────────────────────────────────
+
+/**
+ * GET /api/public/portfolio/:slug
+ *
+ * Public endpoint — NO authentication required.
+ * Returns the published snapshot for a given slug.
+ *
+ * Security:
+ * - Only published portfolios are returned.
+ * - Slug is normalized/validated before the DB query.
+ * - Response uses toPublicPortfolio() allowlist serialization.
+ * - No draft data, no auth metadata, no secrets exposed.
+ * - No req.userId is used — this is purely public.
+ */
+export async function getPublicPortfolioHandler(
+  req: Request, res: Response, next: NextFunction
+): Promise<void> {
+  try {
+    const rawSlug = req.params['slug']
+    if (!rawSlug || typeof rawSlug !== 'string') {
+      res.status(404).json({ success: false, error: 'Portfolio not found.' })
+      return
+    }
+
+    const portfolio = await getPublishedPortfolioBySlug(rawSlug)
+
+    if (!portfolio || !portfolio.publishedSnapshot) {
+      // Return the same 404 regardless of whether the slug exists as a draft
+      // — never leak whether a private draft exists at this slug
+      res.status(404).json({
+        success: false,
+        error: 'Portfolio not found or not yet published.',
+      })
+      return
+    }
+
+    const publicData = toPublicPortfolio(portfolio as never)
+
+    // Verify none of the forbidden fields leaked through (extra safety layer)
+    const serialized = JSON.stringify(publicData)
+    if (
+      serialized.includes('passwordHash') ||
+      serialized.includes('emailVerificationToken') ||
+      serialized.includes('passwordResetToken') ||
+      serialized.includes('JWT_SECRET') ||
+      serialized.includes('AI_API_KEY')
+    ) {
+      // This should never happen — log and return safe error
+      console.error('[Security] Forbidden field detected in public portfolio response — suppressed')
+      res.status(500).json({ success: false, error: 'Internal error. Please try again.' })
+      return
+    }
+
+    res.json({
+      success: true,
+      data: publicData,
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * POST /api/portfolios/:id/unpublish
+ *
+ * Authenticated owner endpoint.
+ * Changes portfolio status from 'published' to 'draft'.
+ * Preserves the publishedSnapshot for history.
+ */
+export async function unpublishPortfolioHandler(
+  req: Request, res: Response, next: NextFunction
+): Promise<void> {
+  try {
+    assertValidation(req)
+    const id = paramId(req)
+
+    const portfolio = await unpublishPortfolio(req.userId!, id)
+    if (!portfolio) {
+      res.status(404).json({ success: false, error: 'Portfolio not found.' })
+      return
+    }
+
+    res.json({
+      success: true,
+      data: { portfolio: toSafePortfolio(portfolio) },
+    })
+  } catch (err) {
+    next(err)
+  }
 }

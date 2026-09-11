@@ -29,6 +29,7 @@ import { PortfolioListPage } from './pages/portfolio/PortfolioListPage'
 import { PortfolioWorkspacePage } from './pages/portfolio/PortfolioWorkspacePage'
 import { PortfolioPreviewPage } from './pages/portfolio/PortfolioPreviewPage'
 import { PortfolioEditorPage } from './pages/portfolio/PortfolioEditorPage'
+import { PublicPortfolioPage } from './pages/public/PublicPortfolioPage'
 
 function App() {
   return (
@@ -156,7 +157,6 @@ function App() {
               </div>
             }
           />
-        </Routes>
       </AuthProvider>
     </BrowserRouter>
   )

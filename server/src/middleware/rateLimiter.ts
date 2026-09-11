@@ -77,3 +77,21 @@ export const publishLimiter = rateLimit({
     error: 'Too many publish requests. Please wait before publishing again.',
   },
 })
+
+/**
+ * Phase 7: Applied to public portfolio read endpoints.
+ * Public portfolios can be shared widely — this limit is generous.
+ * 300 requests per 15 minutes per IP covers normal browsing/sharing.
+ * Distributed rate limiting (Redis) can replace this in a future phase.
+ * NOTE: Do NOT apply the authenticated generalLimiter to public routes.
+ */
+export const publicReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env['NODE_ENV'] === 'test' ? 2000 : 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many requests. Please try again shortly.',
+  },
+})

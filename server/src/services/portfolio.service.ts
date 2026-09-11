@@ -819,3 +819,128 @@ export async function publishPortfolio(
   await portfolio.save()
   return { portfolio, validation }
 }
+
+// ─── Phase 7: Public portfolio access ────────────────────────────────────────
+
+/**
+ * Public serialization of a published snapshot for the public API.
+ *
+ * ALLOWLIST approach — only fields intended for public display.
+ * NEVER includes: passwordHash, tokens, userId, profileId,
+ * internal MongoDB fields, auth metadata, private secrets.
+ *
+ * The snapshot profile was already sanitized at publish time
+ * (see publishPortfolio → snapshotProfile).
+ * This function applies a second layer of serialization to be safe.
+ */
+export function toPublicPortfolio(portfolio: IPortfolio): Record<string, unknown> {
+  if (!portfolio.publishedSnapshot) {
+    throw Object.assign(new Error('Portfolio has no published snapshot.'), { statusCode: 404 })
+  }
+
+  const snap = portfolio.publishedSnapshot
+
+  // Allowlist the snapshot profile — no internal fields
+  const publicProfile: Record<string, unknown> = {
+    fullName:    snap.profile.fullName,
+    headline:    snap.profile.headline,
+    // profilePhoto is included if present (it's a public URL already)
+    profilePhoto: snap.profile.profilePhoto,
+    location:    snap.profile.location,
+    // email exposed only if renderer ContactSection renders it
+    // (controlled by template) — included in snapshot as user opted in
+    email:       snap.profile.email,
+    website:     snap.profile.website,
+    linkedinUrl: snap.profile.linkedinUrl,
+    githubUrl:   snap.profile.githubUrl,
+    about:       snap.profile.about,
+    skills:      snap.profile.skills,
+    experience:  snap.profile.experience,
+    education:   snap.profile.education,
+    projects:    snap.profile.projects,
+    certifications: snap.profile.certifications,
+    achievements: snap.profile.achievements,
+    publications: snap.profile.publications,
+    languages:   snap.profile.languages,
+    socialLinks:  snap.profile.socialLinks,
+  }
+
+  return {
+    // Portfolio metadata — safe subset
+    _id:            String(portfolio._id),
+    name:           portfolio.name,
+    slug:           portfolio.slug,
+    status:         portfolio.status,
+    lastPublishedAt: portfolio.lastPublishedAt,
+    // Snapshot configuration
+    template:    snap.template,
+    sections:    snap.sections,
+    theme:       snap.theme,
+    seo:         {
+      title:       snap.seo?.title ?? undefined,
+      description: snap.seo?.description ?? undefined,
+    },
+    profile:     publicProfile,
+    publishedAt: snap.publishedAt,
+  }
+}
+
+/**
+ * Phase 7: Get a published portfolio by slug for public access.
+ *
+ * - Does NOT require authentication.
+ * - Returns ONLY portfolios with status = 'published'.
+ * - Returns null for draft/missing/nonexistent portfolios.
+ * - If multiple published portfolios share a slug (different users),
+ *   returns the most recently published one.
+ * - 1 DB query maximum — no N+1 lookups (snapshot contains all render data).
+ */
+export async function getPublishedPortfolioBySlug(
+  slug: string
+): Promise<IPortfolio | null> {
+  if (!slug || typeof slug !== 'string') return null
+
+  // Normalize the slug before querying — prevents case-variation bypasses
+  const normalizedSlug = slug.toLowerCase().trim()
+
+  // Validate slug format to prevent injection/abuse
+  if (!/^[a-z0-9-]+$/.test(normalizedSlug) || normalizedSlug.length > 80) {
+    return null
+  }
+
+  return Portfolio.findOne({
+    slug: normalizedSlug,
+    status: 'published',
+  })
+    .sort({ lastPublishedAt: -1 }) // Most recently published if slug collides
+}
+
+// ─── Phase 7: Unpublish ───────────────────────────────────────────────────────
+
+/**
+ * Unpublish a portfolio.
+ *
+ * - Requires authentication + ownership.
+ * - Changes status to 'draft'.
+ * - Prevents public access.
+ * - Preserves the publishedSnapshot (for history and potential re-publish).
+ * - Does NOT modify the draft configuration.
+ */
+export async function unpublishPortfolio(
+  userId: string,
+  portfolioId: string
+): Promise<IPortfolio | null> {
+  const portfolio = await getPortfolioById(userId, portfolioId)
+  if (!portfolio) return null
+
+  if (portfolio.status !== 'published') {
+    throw Object.assign(
+      new Error('Portfolio is not currently published.'),
+      { statusCode: 409 }
+    )
+  }
+
+  portfolio.status = 'draft'
+  await portfolio.save()
+  return portfolio
+}

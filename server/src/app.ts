@@ -15,6 +15,7 @@ import authRoutes from './routes/auth.routes'
 import profileRoutes from './routes/profile.routes'
 import aiRoutes from './routes/ai.routes'
 import portfolioRoutes from './routes/portfolio.routes'
+import publicRoutes from './routes/public.routes'
 
 export function createApp() {
   const app = express()
@@ -53,6 +54,8 @@ export function createApp() {
   app.use('/api/profile', profileRoutes)
   app.use('/api/ai', aiRoutes)
   app.use('/api/portfolios', portfolioRoutes)
+  // Phase 7: Public routes — no authentication required
+  app.use('/api/public', publicRoutes)
 
   // ── Health check (for deployment probes — no sensitive info) ─────────────
   app.get('/api/health', (_req, res) => {
