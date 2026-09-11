@@ -46,7 +46,10 @@ export function createApp() {
   // ── Cookie parsing ────────────────────────────────────────────────────────
   app.use(cookieParser())
 
-  // ── General rate limiter (100 req/15min per IP on all /api routes) ────────
+  // ── Phase 7: Public routes — no authentication required (uses publicReadLimiter) ─
+  app.use('/api/public', publicRoutes)
+
+  // ── General rate limiter (100 req/15min per IP on authenticated /api routes) ──
   app.use('/api', generalLimiter)
 
   // ── Routes ────────────────────────────────────────────────────────────────
@@ -54,8 +57,6 @@ export function createApp() {
   app.use('/api/profile', profileRoutes)
   app.use('/api/ai', aiRoutes)
   app.use('/api/portfolios', portfolioRoutes)
-  // Phase 7: Public routes — no authentication required
-  app.use('/api/public', publicRoutes)
 
   // ── Health check (for deployment probes — no sensitive info) ─────────────
   app.get('/api/health', (_req, res) => {

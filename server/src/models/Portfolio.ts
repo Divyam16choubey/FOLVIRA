@@ -376,5 +376,7 @@ const portfolioSchema = new Schema<IPortfolio>(
 portfolioSchema.index({ userId: 1, createdAt: -1 })
 portfolioSchema.index({ userId: 1, slug: 1 }, { unique: true })
 portfolioSchema.index({ userId: 1, status: 1 })
+// Phase 7: Compound index for public published portfolio lookup by slug
+portfolioSchema.index({ slug: 1, status: 1 })
 
 export const Portfolio = mongoose.model<IPortfolio>('Portfolio', portfolioSchema)

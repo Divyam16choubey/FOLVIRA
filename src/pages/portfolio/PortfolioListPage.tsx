@@ -304,6 +304,18 @@ export function PortfolioListPage() {
                     >
                       Preview
                     </Link>
+                    {/* Phase 7: public link if published */}
+                    {p.status === 'published' && (
+                      <a
+                        href={`/p/${p.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`View public portfolio for ${p.name}`}
+                        className="rounded-[var(--radius-control)] border border-pine/30 bg-[#f4faf7] px-3 py-1.5 text-xs font-bold text-pine transition hover:bg-[#edf4f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                      >
+                        Live ↗
+                      </a>
+                    )}
                     <button
                       type="button"
                       onClick={() => void handleDelete(p._id, p.name)}

@@ -151,11 +151,11 @@ async function setup() {
   ok('Certification entry created', !!certId)
 
   // Create portfolios
-  const pR = await req('POST', '/api/portfolios', { name: 'Phase 6 Test Portfolio', template: 'editorial' }, cookie1)
+  const pR = await req('POST', '/api/portfolios', { name: `Phase 6 Test Portfolio ${ts}`, template: 'editorial' }, cookie1)
   portfolioId = pR.body?.data?.portfolio?._id ?? ''
   ok('Portfolio 1 created', !!portfolioId)
 
-  const p2R = await req('POST', '/api/portfolios', { name: 'User 2 Portfolio', template: 'minimal' }, cookie2)
+  const p2R = await req('POST', '/api/portfolios', { name: `User 2 Portfolio ${ts}`, template: 'minimal' }, cookie2)
   portfolio2Id = p2R.body?.data?.portfolio?._id ?? ''
   ok('Portfolio 2 (user 2) created', !!portfolio2Id)
 }

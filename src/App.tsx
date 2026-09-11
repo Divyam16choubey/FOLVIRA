@@ -108,11 +108,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           {/*
            * ── Portfolio routes ────────────────────────────────────────────
-           * /portfolio       → list + create
-           * /portfolio/:id   → Phase 6 visual editor (replaces Phase 5 workspace)
-           * /portfolio/:id/preview → full-screen preview / published view
+           * /portfolio              → list + create
+           * /portfolio/:id          → Phase 6 visual editor
+           * /portfolio/:id/preview  → full-screen preview / published view
            */}
           <Route
             path="/portfolio"
@@ -139,6 +140,14 @@ function App() {
             }
           />
 
+          {/*
+           * ── Phase 7: Public portfolio route ────────────────────────────
+           * /p/:slug — publicly accessible published portfolio
+           * NO authentication required. Published snapshot only.
+           * Draft data is NEVER rendered here.
+           */}
+          <Route path="/p/:slug" element={<PublicPortfolioPage />} />
+
           {/* 404 — redirect to landing */}
           <Route
             path="*"
@@ -157,6 +166,7 @@ function App() {
               </div>
             }
           />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   )

@@ -494,7 +494,6 @@ export function PortfolioEditorPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         toast.show(err.message, 'error')
-        // Show errors in modal
         setPublishValidation({
           valid: false,
           errors: [err.message],
@@ -506,6 +505,37 @@ export function PortfolioEditorPage() {
       }
     } finally {
       setPublishing(false)
+    }
+  }
+
+  // Phase 7: Unpublish
+  async function handleUnpublish() {
+    if (!id || !localPortfolio) return
+    if (!window.confirm('Unpublish this portfolio? The public URL will stop working until you publish again. Your draft is preserved.')) return
+    setSaving(true)
+    try {
+      const res = await api.post<{ portfolio: Portfolio }>(`/api/portfolios/${id}/unpublish`, {})
+      setPortfolio(res.portfolio)
+      setLocalPortfolio(res.portfolio)
+      toast.show('Portfolio unpublished. The public URL is no longer active.')
+    } catch (err) {
+      toast.show(err instanceof ApiError ? err.message : 'Failed to unpublish.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Phase 7: Copy public URL to clipboard
+  function getPublicUrl(): string {
+    return `${window.location.origin}/p/${localPortfolio?.slug ?? ''}`
+  }
+
+  async function handleCopyPublicUrl() {
+    try {
+      await navigator.clipboard.writeText(getPublicUrl())
+      toast.show('Public URL copied to clipboard.')
+    } catch {
+      toast.show('Could not copy — use the link below to copy manually.', 'error')
     }
   }
 
@@ -897,13 +927,57 @@ export function PortfolioEditorPage() {
                 </div>
 
                 {localPortfolio.lastPublishedAt && (
-                  <div className="rounded-[var(--radius-control)] border border-pine/20 bg-[#f4faf7] px-3 py-2">
+                  <div className="rounded-[var(--radius-control)] border border-pine/20 bg-[#f4faf7] px-3 py-2 space-y-2">
                     <p className="text-xs font-semibold text-pine">
                       Last published:{' '}
                       {new Date(localPortfolio.lastPublishedAt).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric',
                         hour: '2-digit', minute: '2-digit',
                       })}
+                    </p>
+                    {/* Phase 7: Public URL share */}
+                    {localPortfolio.status === 'published' && (
+                      <div className="space-y-1.5 border-t border-pine/15 pt-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-pine">
+                          Public URL
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={getPublicUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 truncate font-mono text-[10px] text-pine hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                            aria-label={`Open public portfolio at ${getPublicUrl()}`}
+                          >
+                            {getPublicUrl()}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => void handleCopyPublicUrl()}
+                            className="shrink-0 rounded-[var(--radius-control)] border border-pine/30 px-2 py-0.5 text-[10px] font-bold text-pine hover:bg-pine/10 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                            aria-label="Copy public URL to clipboard"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Phase 7: Unpublish button */}
+                {localPortfolio.status === 'published' && (
+                  <div className="border-t border-line pt-4">
+                    <button
+                      type="button"
+                      onClick={() => void handleUnpublish()}
+                      disabled={saving}
+                      className="w-full rounded-[var(--radius-control)] border border-[#b83232]/30 px-4 py-2 text-xs font-bold text-[#b83232] hover:border-[#b83232] hover:bg-[#fdf1f1] transition disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                    >
+                      Unpublish Portfolio
+                    </button>
+                    <p className="mt-1 text-[10px] text-muted">
+                      The public URL will stop working. Your draft is preserved.
                     </p>
                   </div>
                 )}

@@ -91,9 +91,10 @@ export function normalizeSlug(raw: string): string {
 }
 
 async function assertSlugUnique(userId: string, slug: string, excludeId?: string): Promise<void> {
+  const normalized = normalizeSlug(slug)
   const query: Record<string, unknown> = {
     userId: new mongoose.Types.ObjectId(userId),
-    slug,
+    slug: normalized,
   }
   if (excludeId) {
     query['_id'] = { $ne: new mongoose.Types.ObjectId(excludeId) }
@@ -101,7 +102,21 @@ async function assertSlugUnique(userId: string, slug: string, excludeId?: string
   const existing = await Portfolio.findOne(query)
   if (existing) {
     throw Object.assign(
-      new Error(`You already have a portfolio with the slug "${slug}". Choose a different name or slug.`),
+      new Error(`You already have a portfolio with the slug "${normalized}". Choose a different name or slug.`),
+      { statusCode: 409 }
+    )
+  }
+
+  // Phase 7: Prevent claiming a slug already in use by another user's published portfolio
+  const publishedConflict = await Portfolio.findOne({
+    slug: normalized,
+    status: 'published',
+    ...(excludeId ? { _id: { $ne: new mongoose.Types.ObjectId(excludeId) } } : {}),
+    userId: { $ne: new mongoose.Types.ObjectId(userId) },
+  })
+  if (publishedConflict) {
+    throw Object.assign(
+      new Error(`The portfolio slug "${normalized}" is already taken by a published portfolio. Choose a different name or slug.`),
       { statusCode: 409 }
     )
   }
@@ -646,6 +661,19 @@ export async function validatePublish(
     errors.push(`Invalid template: "${portfolio.template}"`)
   }
 
+  // Phase 7: Ensure no OTHER portfolio is currently published with this slug
+  const normalizedSlug = normalizeSlug(portfolio.slug)
+  const publishedConflict = await Portfolio.findOne({
+    slug: normalizedSlug,
+    status: 'published',
+    _id: { $ne: portfolio._id },
+  })
+  if (publishedConflict) {
+    errors.push(
+      `The URL slug "${normalizedSlug}" is already in use by another published portfolio. Please change your slug in Settings before publishing.`
+    )
+  }
+
   // Sections
   if (!portfolio.sections || portfolio.sections.length === 0) {
     errors.push('Portfolio must have at least one section.')
@@ -891,8 +919,8 @@ export function toPublicPortfolio(portfolio: IPortfolio): Record<string, unknown
  * - Does NOT require authentication.
  * - Returns ONLY portfolios with status = 'published'.
  * - Returns null for draft/missing/nonexistent portfolios.
- * - If multiple published portfolios share a slug (different users),
- *   returns the most recently published one.
+ * - Deterministic: if multiple published portfolios share a slug in legacy data,
+ *   preserves the original/first created one (prevents URL hijacking).
  * - 1 DB query maximum — no N+1 lookups (snapshot contains all render data).
  */
 export async function getPublishedPortfolioBySlug(
@@ -912,7 +940,7 @@ export async function getPublishedPortfolioBySlug(
     slug: normalizedSlug,
     status: 'published',
   })
-    .sort({ lastPublishedAt: -1 }) // Most recently published if slug collides
+    .sort({ createdAt: 1 }) // Deterministic: original published portfolio is preserved if legacy duplicate exists
 }
 
 // ─── Phase 7: Unpublish ───────────────────────────────────────────────────────

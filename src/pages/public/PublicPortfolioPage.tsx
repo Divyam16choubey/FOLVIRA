@@ -139,7 +139,7 @@ function PublicNotFound({ slug }: { slug?: string }) {
         <p className="text-sm leading-relaxed" style={{ color: '#59625c' }}>
           {slug
             ? `The portfolio at this address is not publicly available.`
-            : 'The portfolio you're looking for doesn't exist or is not yet published.'}
+            : "The portfolio you're looking for doesn't exist or is not yet published."}
         </p>
         <p className="text-xs" style={{ color: '#59625c', opacity: 0.7 }}>
           It may have been unpublished or the link may be incorrect.
