@@ -23,6 +23,7 @@ export function ProjectsSection({ profile, theme, variant = 'editorial' }: Proje
   if (variant === 'developer') {
     return (
       <section
+        id="projects"
         aria-labelledby="projects-heading"
         style={{ backgroundColor: colors.surface, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
@@ -111,6 +112,7 @@ export function ProjectsSection({ profile, theme, variant = 'editorial' }: Proje
   if (variant === 'minimal') {
     return (
       <section
+        id="projects"
         aria-labelledby="projects-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -166,6 +168,7 @@ export function ProjectsSection({ profile, theme, variant = 'editorial' }: Proje
   // editorial
   return (
     <section
+      id="projects"
       aria-labelledby="projects-heading"
       style={{ backgroundColor: colors.surface, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

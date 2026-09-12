@@ -21,11 +21,13 @@ export function AboutSection({ profile, theme, variant = 'editorial' }: AboutSec
   if (variant === 'developer') {
     return (
       <section
+        id="about"
         aria-labelledby="about-heading"
         style={{ backgroundColor: colors.surface, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
       >
         <div className="section-shell">
+          <h2 id="about-heading" className="sr-only">About</h2>
           <p
             className="mb-3 text-xs font-bold uppercase tracking-[0.2em]"
             style={{ color: colors.accent }}
@@ -46,6 +48,7 @@ export function AboutSection({ profile, theme, variant = 'editorial' }: AboutSec
   if (variant === 'minimal') {
     return (
       <section
+        id="about"
         aria-labelledby="about-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -74,6 +77,7 @@ export function AboutSection({ profile, theme, variant = 'editorial' }: AboutSec
   // editorial
   return (
     <section
+      id="about"
       aria-labelledby="about-heading"
       style={{ backgroundColor: colors.surface, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

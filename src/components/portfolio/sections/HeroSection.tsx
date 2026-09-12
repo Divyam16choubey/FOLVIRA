@@ -22,6 +22,7 @@ export function HeroSection({ profile, theme, variant = 'editorial' }: HeroSecti
   if (variant === 'developer') {
     return (
       <section
+        id="hero"
         aria-label="Introduction"
         style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}
         className="py-14 sm:py-20"
@@ -67,6 +68,7 @@ export function HeroSection({ profile, theme, variant = 'editorial' }: HeroSecti
                   rel="noopener noreferrer"
                   style={{ color: colors.accent }}
                   className="hover:underline"
+                  aria-label="GitHub profile (opens in new tab)"
                 >
                   GitHub ↗
                 </a>
@@ -81,6 +83,7 @@ export function HeroSection({ profile, theme, variant = 'editorial' }: HeroSecti
   if (variant === 'minimal') {
     return (
       <section
+        id="hero"
         aria-label="Introduction"
         style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}
         className="py-16 sm:py-24"
@@ -113,6 +116,7 @@ export function HeroSection({ profile, theme, variant = 'editorial' }: HeroSecti
   // editorial (default)
   return (
     <section
+      id="hero"
       aria-label="Introduction"
       style={{ backgroundColor: colors.bg }}
       className="py-16 sm:py-24 lg:py-32"
@@ -147,7 +151,8 @@ export function HeroSection({ profile, theme, variant = 'editorial' }: HeroSecti
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: colors.accent }}
-                className="hover:underline"
+                className="hover:underline break-all"
+                aria-label={`${profile.website} (opens in new tab)`}
               >
                 {profile.website}
               </a>

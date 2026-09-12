@@ -27,6 +27,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Reorder } from 'framer-motion'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { Button } from '../../components/common/Button'
+import { ConfirmModal } from '../../components/common/ConfirmModal'
 import { PortfolioRenderer } from '../../components/portfolio/PortfolioRenderer'
 import { TemplateThumbnail } from '../../components/portfolio/TemplateThumbnail'
 import { api, ApiError } from '../../lib/api'
@@ -53,6 +54,7 @@ import {
 
 type EditorTab = 'content' | 'sections' | 'design' | 'settings'
 type ViewportMode = 'desktop' | 'tablet' | 'mobile'
+type CopyState = 'idle' | 'copied' | 'failed'
 
 interface EditorBundle {
   portfolio: Portfolio
@@ -508,10 +510,11 @@ export function PortfolioEditorPage() {
     }
   }
 
-  // Phase 7: Unpublish
+  // Phase 7+8: Unpublish with styled modal
+  const [showUnpublishModal, setShowUnpublishModal] = useState(false)
   async function handleUnpublish() {
     if (!id || !localPortfolio) return
-    if (!window.confirm('Unpublish this portfolio? The public URL will stop working until you publish again. Your draft is preserved.')) return
+    setShowUnpublishModal(false)
     setSaving(true)
     try {
       const res = await api.post<{ portfolio: Portfolio }>(`/api/portfolios/${id}/unpublish`, {})
@@ -525,7 +528,9 @@ export function PortfolioEditorPage() {
     }
   }
 
-  // Phase 7: Copy public URL to clipboard
+  // Phase 7+8: Copy public URL to clipboard with visual feedback
+  const [copyState, setCopyState] = useState<CopyState>('idle')
+
   function getPublicUrl(): string {
     return `${window.location.origin}/p/${localPortfolio?.slug ?? ''}`
   }
@@ -533,9 +538,26 @@ export function PortfolioEditorPage() {
   async function handleCopyPublicUrl() {
     try {
       await navigator.clipboard.writeText(getPublicUrl())
+      setCopyState('copied')
       toast.show('Public URL copied to clipboard.')
+      setTimeout(() => setCopyState('idle'), 2000)
     } catch {
+      setCopyState('failed')
       toast.show('Could not copy — use the link below to copy manually.', 'error')
+      setTimeout(() => setCopyState('idle'), 2000)
+    }
+  }
+
+  async function handleSharePublicUrl() {
+    const url = getPublicUrl()
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: localPortfolio?.name ?? 'Portfolio', url })
+      } catch {
+        // User cancelled share — no error needed
+      }
+    } else {
+      void handleCopyPublicUrl()
     }
   }
 
@@ -954,23 +976,41 @@ export function PortfolioEditorPage() {
                           <button
                             type="button"
                             onClick={() => void handleCopyPublicUrl()}
-                            className="shrink-0 rounded-[var(--radius-control)] border border-pine/30 px-2 py-0.5 text-[10px] font-bold text-pine hover:bg-pine/10 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                            className={[
+                              'shrink-0 rounded-[var(--radius-control)] border px-2 py-0.5 text-[10px] font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine',
+                              copyState === 'copied'
+                                ? 'border-pine bg-pine/10 text-pine'
+                                : copyState === 'failed'
+                                  ? 'border-[#b83232]/30 text-[#b83232]'
+                                  : 'border-pine/30 text-pine hover:bg-pine/10',
+                            ].join(' ')}
                             aria-label="Copy public URL to clipboard"
+                            aria-live="polite"
                           >
-                            Copy
+                            {copyState === 'copied' ? '✓ Copied' : copyState === 'failed' ? 'Failed' : 'Copy'}
                           </button>
+                          {typeof navigator.share === 'function' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleSharePublicUrl()}
+                              className="shrink-0 rounded-[var(--radius-control)] border border-pine/30 px-2 py-0.5 text-[10px] font-bold text-pine hover:bg-pine/10 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                              aria-label="Share public URL"
+                            >
+                              Share
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Phase 7: Unpublish button */}
+                {/* Phase 7+8: Unpublish button with styled modal */}
                 {localPortfolio.status === 'published' && (
                   <div className="border-t border-line pt-4">
                     <button
                       type="button"
-                      onClick={() => void handleUnpublish()}
+                      onClick={() => setShowUnpublishModal(true)}
                       disabled={saving}
                       className="w-full rounded-[var(--radius-control)] border border-[#b83232]/30 px-4 py-2 text-xs font-bold text-[#b83232] hover:border-[#b83232] hover:bg-[#fdf1f1] transition disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
                     >
@@ -1075,6 +1115,20 @@ export function PortfolioEditorPage() {
           onCancel={() => setShowPublishModal(false)}
           publishing={publishing}
           validation={publishValidation}
+        />
+      )}
+
+      {/* Phase 8: Unpublish confirmation modal */}
+      {showUnpublishModal && (
+        <ConfirmModal
+          title="Unpublish Portfolio?"
+          description="Are you sure you want to unpublish this portfolio? The public URL will immediately stop working, but your portfolio data and draft will remain safely preserved in your account."
+          confirmLabel="Unpublish"
+          cancelLabel="Keep Published"
+          variant="danger"
+          loading={saving}
+          onConfirm={() => void handleUnpublish()}
+          onCancel={() => setShowUnpublishModal(false)}
         />
       )}
     </div>

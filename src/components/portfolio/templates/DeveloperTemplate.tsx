@@ -4,10 +4,13 @@
  * Visual direction: clean technical aesthetic, dark or dark-tinted,
  * project-focused, GitHub-friendly, professional.
  * No neon colors, no fake terminal effects, no gimmicks.
+ *
+ * Phase 8: Improved responsive navigation with mobile drawer.
  */
 import type { TemplateProps } from '../TemplateRegistry'
 import type { SectionType } from '../../../types/portfolio'
 import { getThemeColors, getThemeFontFamily } from '../../../types/portfolio'
+import { PortfolioNav } from '../PortfolioNav'
 import { HeroSection } from '../sections/HeroSection'
 import { AboutSection } from '../sections/AboutSection'
 import { ExperienceSection } from '../sections/ExperienceSection'
@@ -49,9 +52,9 @@ export function DeveloperTemplate({ portfolio, profile }: TemplateProps) {
       }}
       data-template="developer"
     >
-      {/* Developer nav bar */}
+      {/* Developer nav bar — Phase 8: improved responsive nav with mobile drawer */}
       <div
-        className="sticky top-0 z-10 py-3"
+        className="sticky top-0 z-10 py-3 relative"
         style={{
           backgroundColor: colors.bg,
           borderBottom: `1px solid ${colors.border}`,
@@ -59,19 +62,29 @@ export function DeveloperTemplate({ portfolio, profile }: TemplateProps) {
       >
         <div className="section-shell flex items-center justify-between gap-4">
           <span
-            className="font-mono text-sm font-bold"
+            className="font-mono text-sm font-bold shrink-0"
             style={{ color: colors.accent }}
           >
             {profile.fullName ? `~/${profile.fullName.toLowerCase().replace(/\s+/g, '-')}` : '~/portfolio'}
           </span>
-          <div className="hidden sm:flex items-center gap-4">
+
+          {/* Desktop: Section nav + external links */}
+          <div className="hidden sm:flex items-center gap-1">
+            <PortfolioNav
+              sections={sections}
+              profile={profile}
+              colors={colors}
+              variant="developer"
+              fontFamily="monospace"
+            />
             {profile.githubUrl && (
               <a
                 href={profile.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-medium hover:underline"
+                className="px-2.5 py-1 text-xs font-medium hover:underline"
                 style={{ color: isDark ? colors.muted : colors.accent }}
+                aria-label="GitHub profile (opens in new tab)"
               >
                 GitHub ↗
               </a>
@@ -79,12 +92,23 @@ export function DeveloperTemplate({ portfolio, profile }: TemplateProps) {
             {profile.email && (
               <a
                 href={`mailto:${profile.email}`}
-                className="text-xs font-medium hover:underline"
+                className="px-2.5 py-1 text-xs font-medium hover:underline break-all"
                 style={{ color: isDark ? colors.muted : colors.accent }}
               >
                 {profile.email}
               </a>
             )}
+          </div>
+
+          {/* Mobile: hamburger only */}
+          <div className="sm:hidden">
+            <PortfolioNav
+              sections={sections}
+              profile={profile}
+              colors={colors}
+              variant="developer"
+              fontFamily="monospace"
+            />
           </div>
         </div>
       </div>

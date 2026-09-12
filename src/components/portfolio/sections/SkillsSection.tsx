@@ -21,6 +21,7 @@ export function SkillsSection({ profile, theme, variant = 'editorial' }: SkillsS
   if (variant === 'developer') {
     return (
       <section
+        id="skills"
         aria-labelledby="skills-heading"
         style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
@@ -57,6 +58,7 @@ export function SkillsSection({ profile, theme, variant = 'editorial' }: SkillsS
   if (variant === 'minimal') {
     return (
       <section
+        id="skills"
         aria-labelledby="skills-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -91,6 +93,7 @@ export function SkillsSection({ profile, theme, variant = 'editorial' }: SkillsS
   // editorial
   return (
     <section
+      id="skills"
       aria-labelledby="skills-heading"
       style={{ backgroundColor: colors.bg, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

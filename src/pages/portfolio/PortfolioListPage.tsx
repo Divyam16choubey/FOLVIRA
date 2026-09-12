@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { Button } from '../../components/common/Button'
+import { ConfirmModal } from '../../components/common/ConfirmModal'
 import { TemplateThumbnail } from '../../components/portfolio/TemplateThumbnail'
 import { api, ApiError } from '../../lib/api'
 import type { Portfolio } from '../../types/portfolio'
@@ -33,6 +34,9 @@ export function PortfolioListPage() {
   const [createError, setCreateError] = useState('')
   const [form, setForm] = useState<CreateForm>({ name: 'My Portfolio', template: 'editorial' })
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null)
+  const [copyFailedSlug, setCopyFailedSlug] = useState<string | null>(null)
 
   const loadPortfolios = useCallback(async () => {
     try {
@@ -72,9 +76,11 @@ export function PortfolioListPage() {
     }
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return
+    const { id } = deleteTarget
     setDeletingId(id)
+    setDeleteTarget(null)
     try {
       await api.delete(`/api/portfolios/${id}`)
       setPortfolios((prev) => prev.filter((p) => p._id !== id))
@@ -82,6 +88,31 @@ export function PortfolioListPage() {
       setError(err instanceof ApiError ? err.message : 'Failed to delete portfolio.')
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  async function handleCopyUrl(slug: string) {
+    const url = `${window.location.origin}/p/${slug}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedSlug(slug)
+      setTimeout(() => setCopiedSlug((curr) => (curr === slug ? null : curr)), 2000)
+    } catch {
+      setCopyFailedSlug(slug)
+      setTimeout(() => setCopyFailedSlug((curr) => (curr === slug ? null : curr)), 2000)
+    }
+  }
+
+  async function handleShare(p: Portfolio) {
+    const url = `${window.location.origin}/p/${p.slug}`
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: p.name, url })
+      } catch {
+        // User cancelled share
+      }
+    } else {
+      void handleCopyUrl(p.slug)
     }
   }
 
@@ -304,21 +335,49 @@ export function PortfolioListPage() {
                     >
                       Preview
                     </Link>
-                    {/* Phase 7: public link if published */}
+                    {/* Phase 7+8: public link and sharing if published */}
                     {p.status === 'published' && (
-                      <a
-                        href={`/p/${p.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`View public portfolio for ${p.name}`}
-                        className="rounded-[var(--radius-control)] border border-pine/30 bg-[#f4faf7] px-3 py-1.5 text-xs font-bold text-pine transition hover:bg-[#edf4f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
-                      >
-                        Live ↗
-                      </a>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => void handleCopyUrl(p.slug)}
+                          aria-label={`Copy public link for ${p.name}`}
+                          aria-live="polite"
+                          className={[
+                            'rounded-[var(--radius-control)] border px-2.5 py-1.5 text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine',
+                            copiedSlug === p.slug
+                              ? 'border-pine bg-pine/10 text-pine'
+                              : copyFailedSlug === p.slug
+                                ? 'border-[#b83232]/30 text-[#b83232]'
+                                : 'border-pine/30 bg-[#f4faf7] text-pine hover:bg-[#edf4f1]',
+                          ].join(' ')}
+                        >
+                          {copiedSlug === p.slug ? '✓ Copied' : copyFailedSlug === p.slug ? 'Failed' : 'Copy'}
+                        </button>
+                        {typeof navigator.share === 'function' && (
+                          <button
+                            type="button"
+                            onClick={() => void handleShare(p)}
+                            aria-label={`Share ${p.name}`}
+                            className="rounded-[var(--radius-control)] border border-pine/30 bg-[#f4faf7] px-2.5 py-1.5 text-xs font-bold text-pine transition hover:bg-[#edf4f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                          >
+                            Share
+                          </button>
+                        )}
+                        <a
+                          href={`/p/${p.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`View public portfolio for ${p.name}`}
+                          className="rounded-[var(--radius-control)] border border-pine/30 bg-[#f4faf7] px-2.5 py-1.5 text-xs font-bold text-pine transition hover:bg-[#edf4f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+                        >
+                          Live ↗
+                        </a>
+                      </>
                     )}
                     <button
                       type="button"
-                      onClick={() => void handleDelete(p._id, p.name)}
+                      onClick={() => setDeleteTarget({ id: p._id, name: p.name })}
                       disabled={deletingId === p._id}
                       aria-label={`Delete ${p.name}`}
                       className="rounded-[var(--radius-control)] px-2.5 py-1.5 text-xs font-bold text-red-400 hover:text-red-600 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine transition"
@@ -333,6 +392,20 @@ export function PortfolioListPage() {
         )}
 
       </div>
+
+      {/* Phase 8: ConfirmModal for deletion */}
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete Portfolio?"
+          description={`Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
+          loading={deletingId === deleteTarget.id}
+          onConfirm={() => void handleConfirmDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </AppLayout>
   )
 }

@@ -56,6 +56,7 @@ export function ContactSection({ profile, theme, variant = 'editorial' }: Contac
   if (variant === 'developer') {
     return (
       <section
+        id="contact"
         aria-labelledby="contact-heading"
         style={{ backgroundColor: colors.surface, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
@@ -74,6 +75,7 @@ export function ContactSection({ profile, theme, variant = 'editorial' }: Contac
                 rel={link.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
                 className="text-sm font-medium hover:underline"
                 style={{ color: colors.accent }}
+                aria-label={link.href.startsWith('mailto:') ? undefined : `${link.text} (opens in new tab)`}
               >
                 {link.text} ↗
               </a>
@@ -87,6 +89,7 @@ export function ContactSection({ profile, theme, variant = 'editorial' }: Contac
   if (variant === 'minimal') {
     return (
       <section
+        id="contact"
         aria-labelledby="contact-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -123,6 +126,7 @@ export function ContactSection({ profile, theme, variant = 'editorial' }: Contac
   // editorial
   return (
     <section
+      id="contact"
       aria-labelledby="contact-heading"
       style={{ backgroundColor: colors.bg, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

@@ -21,6 +21,7 @@ export function CertificationSection({ profile, theme, variant = 'editorial' }: 
   if (variant === 'developer') {
     return (
       <section
+        id="certifications"
         aria-labelledby="certs-heading"
         style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}
         className="py-10 sm:py-14"
@@ -50,6 +51,7 @@ export function CertificationSection({ profile, theme, variant = 'editorial' }: 
   if (variant === 'minimal') {
     return (
       <section
+        id="certifications"
         aria-labelledby="certs-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-10 sm:py-14"
@@ -86,6 +88,7 @@ export function CertificationSection({ profile, theme, variant = 'editorial' }: 
   // editorial
   return (
     <section
+      id="certifications"
       aria-labelledby="certs-heading"
       style={{ backgroundColor: colors.surface, borderTop: `1px solid ${colors.border}` }}
       className="py-12 sm:py-16"

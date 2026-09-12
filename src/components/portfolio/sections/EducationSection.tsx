@@ -20,6 +20,7 @@ export function EducationSection({ profile, theme, variant = 'editorial' }: Educ
   if (variant === 'developer') {
     return (
       <section
+        id="education"
         aria-labelledby="education-heading"
         style={{ backgroundColor: colors.surface, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
@@ -59,6 +60,7 @@ export function EducationSection({ profile, theme, variant = 'editorial' }: Educ
   if (variant === 'minimal') {
     return (
       <section
+        id="education"
         aria-labelledby="education-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -100,6 +102,7 @@ export function EducationSection({ profile, theme, variant = 'editorial' }: Educ
   // editorial
   return (
     <section
+      id="education"
       aria-labelledby="education-heading"
       style={{ backgroundColor: colors.surface, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

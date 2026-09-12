@@ -29,6 +29,7 @@ export function ExperienceSection({ profile, theme, variant = 'editorial' }: Exp
   if (variant === 'developer') {
     return (
       <section
+        id="experience"
         aria-labelledby="experience-heading"
         style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}
         className="py-12 sm:py-16"
@@ -78,6 +79,7 @@ export function ExperienceSection({ profile, theme, variant = 'editorial' }: Exp
   if (variant === 'minimal') {
     return (
       <section
+        id="experience"
         aria-labelledby="experience-heading"
         style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}
         className="py-12 sm:py-16"
@@ -125,6 +127,7 @@ export function ExperienceSection({ profile, theme, variant = 'editorial' }: Exp
   // editorial
   return (
     <section
+      id="experience"
       aria-labelledby="experience-heading"
       style={{ backgroundColor: colors.bg, borderTop: `1px solid ${colors.border}` }}
       className="py-14 sm:py-20"

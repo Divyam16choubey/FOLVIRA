@@ -6,10 +6,13 @@
  *
  * The template controls layout, spacing, typography hierarchy, and visual treatment.
  * Section components control rendering of structured profile content.
+ *
+ * Phase 8: Added sticky in-page navigation header with mobile drawer.
  */
 import type { TemplateProps } from '../TemplateRegistry'
 import type { SectionType } from '../../../types/portfolio'
 import { getThemeColors } from '../../../types/portfolio'
+import { PortfolioNav } from '../PortfolioNav'
 import { HeroSection } from '../sections/HeroSection'
 import { AboutSection } from '../sections/AboutSection'
 import { ExperienceSection } from '../sections/ExperienceSection'
@@ -48,6 +51,14 @@ export function EditorialTemplate({ portfolio, profile }: TemplateProps) {
       }}
       data-template="editorial"
     >
+      {/* Phase 8: Sticky in-page navigation */}
+      <PortfolioNav
+        sections={sections}
+        profile={profile}
+        colors={colors}
+        variant="editorial"
+      />
+
       {visibleSections.map((section) => sectionMap[section.type])}
 
       {/* Footer line */}

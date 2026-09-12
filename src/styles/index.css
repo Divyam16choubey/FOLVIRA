@@ -52,3 +52,11 @@
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   .group:hover .template-frame { transform: none; }
 }
+
+/* Phase 8: Responsive text overflow protection for portfolio sections */
+[data-template] { overflow-wrap: break-word; word-break: break-word; }
+[data-template] a { overflow-wrap: break-word; word-break: break-word; }
+[data-template] h1 { overflow-wrap: break-word; word-break: break-word; }
+
+/* Phase 8: Scroll offset for sticky nav — sections land below the nav bar */
+[data-template] section[id] { scroll-margin-top: 3.5rem; }

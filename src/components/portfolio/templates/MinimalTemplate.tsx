@@ -4,10 +4,13 @@
  * Visual direction: restrained, professional, strong whitespace,
  * minimal decoration, sidebar-style labels.
  * Feels substantially different from Editorial while belonging to FOLVIRA.
+ *
+ * Phase 8: Added section navigation links to top bar with mobile drawer.
  */
 import type { TemplateProps } from '../TemplateRegistry'
 import type { SectionType } from '../../../types/portfolio'
 import { getThemeColors, getThemeFontFamily, getThemeHeadingFontFamily } from '../../../types/portfolio'
+import { PortfolioNav } from '../PortfolioNav'
 import { HeroSection } from '../sections/HeroSection'
 import { AboutSection } from '../sections/AboutSection'
 import { ExperienceSection } from '../sections/ExperienceSection'
@@ -48,23 +51,25 @@ export function MinimalTemplate({ portfolio, profile }: TemplateProps) {
       }}
       data-template="minimal"
     >
-      {/* Minimal top bar */}
+      {/* Minimal top bar with Phase 8 section navigation */}
       <div
-        className="py-3"
+        className="sticky top-0 z-10 py-3 relative"
         style={{ borderBottom: `2px solid ${colors.text}`, backgroundColor: colors.bg }}
       >
-        <div className="section-shell flex items-center justify-between">
+        <div className="section-shell flex items-center justify-between gap-4">
           <span
-            className="text-xs font-extrabold uppercase tracking-[0.2em]"
+            className="text-xs font-extrabold uppercase tracking-[0.2em] shrink-0"
             style={{ color: colors.text, fontFamily }}
           >
             {profile.fullName}
           </span>
-          {profile.headline && (
-            <span className="hidden sm:block text-xs" style={{ color: colors.muted }}>
-              {profile.headline}
-            </span>
-          )}
+          <PortfolioNav
+            sections={sections}
+            profile={profile}
+            colors={colors}
+            variant="minimal"
+            fontFamily={fontFamily}
+          />
         </div>
       </div>
 
