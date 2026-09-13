@@ -44,8 +44,8 @@
  * 38.  Phase 4 regression
  * 39.  Phase 5 regression
  *
- * Run: node test-phase6.js
- * Server must be running: npm run dev (in server/)
+ * Run: npx tsx tests/test-phase6.js
+ * Server must be running: npm run dev (in backend/)
  */
 
 const BASE = 'http://localhost:3001'

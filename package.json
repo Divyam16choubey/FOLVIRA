@@ -1,28 +1,26 @@
 {
-  "name": "folvira",
-  "private": true,
+  "name": "folvira-monorepo",
   "version": "0.1.0",
-  "type": "module",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "framer-motion": "^12.23.12",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-router-dom": "^7.18.3",
-    "zod": "^3.25.76"
-  },
-  "devDependencies": {
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.8.3",
-    "vite": "^7.1.2"
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start:backend": "npm --prefix backend run start",
+    "typecheck": "npm --prefix frontend run build && npm --prefix backend run typecheck",
+    "test": "npm --prefix backend run test",
+    "test:smoke": "npm --prefix backend run test:smoke",
+    "test:ai": "npm --prefix backend run test:ai",
+    "test:portfolio": "npm --prefix backend run test:portfolio",
+    "test:phase6": "npm --prefix backend run test:phase6",
+    "test:phase7": "npm --prefix backend run test:phase7",
+    "test:phase8": "npm --prefix backend run test:phase8",
+    "test:phase9": "npm --prefix backend run test:phase9"
   }
 }

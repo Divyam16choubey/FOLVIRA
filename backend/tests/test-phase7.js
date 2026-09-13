@@ -62,8 +62,8 @@
  * 37.  Phase 5: portfolio CRUD still works
  * 38.  Phase 6: overrides/selections/editor still work
  *
- * Run: node test-phase7.js
- * Server must be running first.
+ * Run: npx tsx tests/test-phase7.js
+ * Server must be running: npm run dev (in backend/)
  */
 
 const BASE = 'http://localhost:3001'

@@ -4,7 +4,8 @@
  * Tests against a running server at http://localhost:3001.
  * Requires MongoDB connection.
  *
- * Run: npx tsx test-phase9.js
+ * Run: npx tsx tests/test-phase9.js
+ * Server must be running: npm run dev (in backend/)
  *
  * Covers:
  * - Environment validation behavior

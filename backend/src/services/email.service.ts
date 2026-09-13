@@ -16,7 +16,7 @@ function getTransporter(): Transporter {
   if (!env.isEmailConfigured) {
     throw new Error(
       '[Email] Email provider is not configured. ' +
-        'Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASS in server/.env'
+        'Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASS in backend/.env'
     )
   }
 

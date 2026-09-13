@@ -206,7 +206,7 @@ export class OpenAIProvider implements AIProvider {
 
   constructor() {
     if (!env.AI_API_KEY) {
-      throw new Error('AI_API_KEY is not configured. Set it in server/.env to enable AI features.')
+      throw new Error('AI_API_KEY is not configured. Set it in backend/.env to enable AI features.')
     }
     this.client = new OpenAI({ apiKey: env.AI_API_KEY })
     this.modelId = env.AI_MODEL
@@ -597,7 +597,7 @@ export function getAIProvider(options?: { useMock?: boolean }): AIProvider {
 
   if (!env.isAIConfigured) {
     throw new Error(
-      'AI provider is not configured. Set AI_API_KEY in server/.env to enable AI features.'
+      'AI provider is not configured. Set AI_API_KEY in backend/.env to enable AI features.'
     )
   }
 
@@ -606,5 +606,5 @@ export function getAIProvider(options?: { useMock?: boolean }): AIProvider {
     return new OpenAIProvider()
   }
 
-  throw new Error(`Unsupported AI provider: "${provider}". Set AI_PROVIDER=openai in server/.env.`)
+  throw new Error(`Unsupported AI provider: "${provider}". Set AI_PROVIDER=openai in backend/.env.`)
 }

@@ -4,7 +4,8 @@
  * Tests against a running server at http://localhost:3001.
  * Requires MongoDB connection.
  *
- * Run: node test-phase8.js
+ * Run: npx tsx tests/test-phase8.js
+ * Server must be running: npm run dev (in backend/)
  */
 
 const BASE = 'http://localhost:3001'

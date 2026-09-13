@@ -1,23 +1,51 @@
 # ── Build outputs ────────────────────────────────────────────────────────────
-node_modules
-dist
-.vite
+node_modules/
+*/node_modules/
+dist/
+*/dist/
+.vite/
+*/.vite/
 *.tsbuildinfo
-server/dist
-server/node_modules
+*/*.tsbuildinfo
 
-# ── Environment / secrets ─────────────────────────────────────────────────────
-# NEVER commit real environment files.
+# ── Environment & Secrets ──────────────────────────────────────────────────
+# NEVER commit real environment or secrets files.
 .env
+.env.*
 .env.local
 .env.*.local
-server/.env
-server/.env.local
-server/.env.*.local
+frontend/.env
+frontend/.env.*
+frontend/.env.local
+backend/.env
+backend/.env.*
+backend/.env.local
 
-# ── OS / editor ───────────────────────────────────────────────────────────────
+# Whitelist environment documentation templates
+!backend/.env.example
+!.env.example
+
+# ── Logs & Debugging ───────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Testing & Coverage ─────────────────────────────────────────────────────
+coverage/
+*.lcov
+.nyc_output/
+
+# ── Runtime & Uploads ──────────────────────────────────────────────────────
+uploads/
+*/uploads/
+
+# ── OS & Editor Files ──────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 *.swp
-.idea
-.vscode
+*.swo
+.idea/
+.vscode/

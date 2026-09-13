@@ -1,5 +1,9 @@
-import fs from 'fs'
-import path from 'path'
+/**
+ * test-api.js — Phase 3 Smoke Verification & Regression Suite.
+ *
+ * Run: npx tsx tests/test-api.js (or npm run test:smoke in backend/)
+ * Server must be running: npm run dev (in backend/)
+ */
 
 async function run() {
   const baseUrl = 'http://localhost:3001'

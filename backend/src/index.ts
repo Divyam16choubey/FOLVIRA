@@ -31,7 +31,7 @@ async function start() {
       logger.warn(
         'Server',
         'Email provider not configured. Verification and reset emails will not be sent. ' +
-          'Set EMAIL_HOST, EMAIL_USER, EMAIL_PASS in server/.env'
+          'Set EMAIL_HOST, EMAIL_USER, EMAIL_PASS in backend/.env'
       )
     }
   })

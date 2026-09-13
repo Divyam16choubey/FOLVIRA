@@ -4,6 +4,10 @@
 
 FOLVIRA is a production-ready, AI-powered personal portfolio and brand builder. It empowers software engineers, designers, and tech professionals to aggregate their career history, normalize profile data from diverse sources (such as resumes and GitHub), generate tailored portfolios across distinct aesthetic templates, refine them with a live split-pane visual editor, and publish immutable portfolio snapshots at dedicated public URLs (`/p/:slug`).
 
+FOLVIRA is organized as a **clean, decoupled two-application monorepo**:
+- **`frontend/`**: Modern React 19 SPA powered by Vite, Tailwind CSS, and Framer Motion.
+- **`backend/`**: High-performance Node.js / Express 5 API powered by TypeScript and MongoDB Atlas via Mongoose.
+
 ---
 
 ## Current Status & Completed Phases
@@ -24,7 +28,7 @@ FOLVIRA has completed **Phases 1 through 9**, progressing from foundational desi
 
 ---
 
-## Core Product Architecture
+## Monorepo Architecture
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -37,13 +41,13 @@ FOLVIRA has completed **Phases 1 through 9**, progressing from foundational desi
              └── Public Portfolio Route (/p/:slug)
              │
              ▼
-    [ Vite + React 19 SPA ]
+    [ frontend/ — Vite + React 19 SPA ]
              │  • Route-level React.lazy() code-splitting
              │  • Split vendor chunks (vendor-react, vendor-motion)
              │  • Tailwind CSS + Framer Motion Design Tokens
              │
              ▼  HTTP Requests (Credentials: include, JSON API)
-    [ Express 5 Backend (Node.js + TypeScript) ]
+    [ backend/ — Express 5 Backend (Node.js + TypeScript) ]
              │
              ├── Security & Middleware Layer
              │     ├── Helmet (CSP, HSTS, X-Content-Type-Options, X-Frame-Options)
@@ -81,7 +85,7 @@ FOLVIRA has completed **Phases 1 through 9**, progressing from foundational desi
 
 ### 1. Unified Master Profile & Data Sources
 - **Normalized Schema**: Structured storage for personal info, experience, education, projects, skills, certifications, and social links.
-- **Resume Import**: Upload PDF/DOCX resumes to extract career milestones automatically.
+- **Resume Import**: Upload PDF/DOCX resumes to extract career milestones automatically in-memory.
 - **GitHub Import**: Connect GitHub username to pull top repositories, stars, languages, and commit activity directly into project entries.
 - **Completeness Meter**: Dynamic calculation of profile completeness with actionable suggestions.
 
@@ -89,7 +93,7 @@ FOLVIRA has completed **Phases 1 through 9**, progressing from foundational desi
 - **Profile Quality Score**: Multi-factor evaluation rating completeness, clarity, impact metrics, and keyword strength.
 - **Headline & Bio Suggestions**: Generate role-specific, editorial headlines and elevator bios tailored to your target position.
 - **Bullet Point Refinement**: Action-verb driven enhancement of job experience and project descriptions.
-- **Graceful Fallback**: Fully functional even when an AI API key is not configured, providing rule-based fallbacks.
+- **Graceful Fallback**: Fully functional even when an AI API key is not configured, providing rule-based mock fallbacks.
 
 ### 3. Five Curated Portfolio Templates
 - **Editorial**: Warm ivory canvas, deep charcoal serif typography, restrained brass accents, editorial hierarchy.
@@ -121,89 +125,115 @@ FOLVIRA has completed **Phases 1 through 9**, progressing from foundational desi
 
 ---
 
+## Monorepo Directory Structure
+
+```text
+FOLVIRA/
+├── .gitignore                      # Monorepo root gitignore
+├── README.md                       # Comprehensive documentation & deployment guide
+├── package.json                    # Root package with npm workspaces & convenience scripts
+│
+├── frontend/                       # Frontend SPA Application
+│   ├── public/                     # Static assets & favicon
+│   │   └── favicon.svg
+│   ├── src/
+│   │   ├── components/             # React components
+│   │   │   ├── ai/                 # AnalysisPanel, QualityScore, SuggestionCard
+│   │   │   ├── auth/               # AuthLayout, FormField, ProtectedRoute
+│   │   │   ├── common/             # Button, ConfirmModal, Icons, Reveal
+│   │   │   ├── landing/            # Hero, Features, HowItWorks, Templates, FinalCta
+│   │   │   ├── layout/             # AppLayout, Navbar, Footer
+│   │   │   ├── portfolio/          # Editor, Preview, TemplateRegistry, Sections
+│   │   │   │   ├── sections/       # Hero, About, Projects, Experience, Skills, etc.
+│   │   │   │   └── templates/      # Developer, Editorial, Minimal templates
+│   │   │   └── profile/            # Experience, Education, Project, Skill forms
+│   │   ├── context/                # AuthContext
+│   │   ├── data/                   # Landing page copy & mock data
+│   │   ├── lib/                    # API client (fetch wrapper with credentials)
+│   │   ├── pages/                  # Route components (lazy-loaded with React.lazy)
+│   │   │   ├── app/                # Dashboard, ProfileEditor, GitHub/Resume import
+│   │   │   ├── auth/               # Login, Signup, ResetPassword, VerifyEmail
+│   │   │   ├── portfolio/          # Editor, Workspace, Preview, PortfolioList
+│   │   │   ├── public/             # PublicPortfolioPage (/p/:slug)
+│   │   │   └── LandingPage.tsx     # Homepage marketing landing
+│   │   ├── styles/                 # Global styles & design tokens
+│   │   │   ├── index.css
+│   │   │   └── tokens.css
+│   │   ├── types/                  # Decoupled frontend TypeScript definitions
+│   │   ├── App.tsx                 # Router definition & Suspense boundary
+│   │   └── main.tsx                # Client entry point
+│   ├── index.html                  # HTML entry point with font preloads
+│   ├── package.json                # Frontend dependencies & scripts
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.ts          # Design tokens & extended palette
+│   ├── tsconfig.app.json           # Client app TSConfig
+│   ├── tsconfig.json               # Root frontend TSConfig
+│   ├── tsconfig.node.json          # Vite TSConfig
+│   └── vite.config.ts              # Proxy & vendor chunk splitting configuration
+│
+└── backend/                        # Express 5 Backend API
+    ├── src/
+    │   ├── app.ts                  # Express application factory & middleware stack
+    │   ├── index.ts                # Server entry point & graceful shutdown
+    │   ├── config/                 # env.ts, db.ts, logger.ts
+    │   ├── controllers/            # auth, profile, ai, portfolio, public handlers
+    │   ├── middleware/             # authenticate, rateLimiter, sanitize, upload, etc.
+    │   ├── models/                 # User, Profile, Portfolio, DataSource, AISuggestion
+    │   ├── routes/                 # Express route declarations
+    │   ├── services/               # auth, profile, ai, portfolio, email, github, resume
+    │   └── types/                  # Express TypeScript declaration merging
+    ├── tests/                      # Automated test suites
+    │   ├── test-api.js             # Phase 3 Smoke verification
+    │   ├── test-portfolio.js       # Phase 5 Portfolio test suite
+    │   ├── test-phase6.js          # Phase 6 Visual Editor test suite
+    │   ├── test-phase7.js          # Phase 7 Publishing test suite
+    │   ├── test-phase8.js          # Phase 8 SEO & Accessibility test suite
+    │   ├── test-phase9.js          # Phase 9 Production Readiness test suite
+    │   └── test-ai.js              # Phase 4 AI Profile Intelligence test suite
+    ├── .env                        # Local untracked environment secrets
+    ├── .env.example                # Documented environment variable template
+    ├── package.json                # Backend dependencies & test scripts
+    ├── package-lock.json
+    └── tsconfig.json               # Backend TypeScript configuration
+```
+
+---
+
 ## Tech Stack
 
-### Frontend
+### Frontend (`frontend/`)
 - **Framework**: React 19, TypeScript
-- **Bundler & Dev Server**: Vite 6
+- **Bundler & Dev Server**: Vite 7
 - **Routing**: React Router 7 (Route-level lazy loading with Suspense)
 - **Styling**: Tailwind CSS, PostCSS, Autoprefixer
 - **Animations**: Framer Motion
 - **Form & Validation**: Zod, React Hook Form
 - **Icons**: Lucide React
 
-### Backend
+### Backend (`backend/`)
 - **Runtime**: Node.js (v18+)
 - **Framework**: Express 5, TypeScript
 - **Database**: MongoDB Atlas via Mongoose 8
 - **Security**: Helmet, CORS, bcryptjs, crypto, express-rate-limit
-- **Authentication**: JWT (JSON Web Tokens) in HTTP-only, SameSite cookies
+- **Authentication**: JWT (JSON Web Tokens) in HTTP-only, SameSite=Lax cookies
 - **Validation**: express-validator, input sanitization middleware
 - **Email**: Nodemailer (SMTP transport)
-- **AI Integration**: OpenAI SDK
-
----
-
-## Directory Structure
-
-```text
-FOLVIRA/
-├── public/                      # Static assets & favicon
-├── server/                      # Express Backend
-│   ├── .env.example             # Documented environment variables
-│   ├── package.json             # Backend dependencies & scripts
-│   ├── tsconfig.json            # Backend TypeScript configuration
-│   ├── test-api.js              # Smoke test suite
-│   ├── test-phase6.js            # Phase 6 visual editor test suite
-│   ├── test-phase7.js            # Phase 7 publishing test suite
-│   ├── test-phase8.js            # Phase 8 regression test suite
-│   ├── test-phase9.js            # Phase 9 production readiness test suite
-│   └── src/
-│       ├── app.ts               # Express app factory & middleware stack
-│       ├── index.ts             # Server entry point & graceful shutdown
-│       ├── config/              # env.ts, db.ts, logger.ts
-│       ├── controllers/         # Request handlers (auth, profile, ai, portfolio, public)
-│       ├── middleware/          # auth, rateLimiter, errorHandler, requestLogger, sanitize
-│       ├── models/              # User, Profile, Portfolio, DataSource Mongoose schemas
-│       ├── routes/              # Express route declarations
-│       ├── services/            # Business logic (auth, profile, ai, portfolio, email, github)
-│       └── types/               # TypeScript definitions
-├── src/                         # Frontend Application
-│   ├── main.tsx                 # Client entry point
-│   ├── App.tsx                  # Routes & Suspense code-splitting
-│   ├── index.css                # Global CSS & Tailwind layers
-│   ├── components/
-│   │   ├── auth/                # Login, Signup, Reset forms
-│   │   ├── common/              # Buttons, inputs, modals, spinners, badges
-│   │   ├── dashboard/           # Overview, stats, quick actions
-│   │   ├── landing/             # Hero, features, templates preview, CTA, footer
-│   │   ├── layout/              # Navbar, Sidebar, AppLayout
-│   │   ├── portfolio/           # Visual editor, sections, live preview pane
-│   │   └── profile/             # Experience, education, project editors, resume uploader
-│   ├── context/                 # AuthContext, PortfolioContext
-│   ├── hooks/                   # Custom React hooks (auth, debounce, media query)
-│   ├── lib/                     # API client, fetch wrapper, utilities
-│   ├── pages/                   # Lazy-loaded page components
-│   └── types/                   # Frontend TypeScript contracts
-├── package.json                 # Root dependencies & scripts
-├── tailwind.config.ts           # Design tokens, color palette, typography
-├── vite.config.ts               # Chunk splitting & proxy configuration
-└── README.md
-```
+- **AI Integration**: OpenAI SDK (with graceful mock provider fallback)
 
 ---
 
 ## Environment Variables
 
-Configure environment variables in `server/.env`. Copy from `server/.env.example`:
+Configure environment variables in `backend/.env`. Copy from `backend/.env.example`:
 
 ```bash
-cp server/.env.example server/.env
+cp backend/.env.example backend/.env
 ```
 
 | Variable | Required | Default | Purpose / Production Requirement |
 |---|---|---|---|
-| `NODE_ENV` | No | `development` | Set to `production` in production |
+| `NODE_ENV` | No | `development` | Set to `production` in production, `test` during mock testing |
 | `PORT` | No | `3001` | Backend HTTP listening port |
 | `MONGODB_URI` | **Yes** | — | MongoDB Atlas connection string (cannot be localhost in production) |
 | `JWT_SECRET` | **Yes** | — | Secret for signing tokens (must be >= 32 chars and random in production) |
@@ -226,99 +256,189 @@ cp server/.env.example server/.env
 ### 1. Prerequisites
 - **Node.js**: v18.0.0 or higher
 - **npm**: v9.0.0 or higher
-- **MongoDB**: Local MongoDB instance or free MongoDB Atlas cluster
+- **MongoDB**: Free MongoDB Atlas cluster or local MongoDB instance
 
 ### 2. Installation
 
-Install frontend dependencies:
-```bash
-npm install
-```
+You can install dependencies independently in both sub-applications:
 
-Install backend dependencies:
 ```bash
-cd server
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# Install backend dependencies
+cd backend
 npm install
 cd ..
 ```
 
+Or from the repository root using npm workspaces:
+```bash
+npm install
+```
+
 ### 3. Configure Local Environment
-Create `server/.env` and set:
+Create `backend/.env` and set:
 ```dotenv
 NODE_ENV=development
 PORT=3001
-MONGODB_URI=mongodb://127.0.0.1:27017/folvira
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/folvira?retryWrites=true&w=majority
 JWT_SECRET=development_secret_key_at_least_32_characters_long_for_testing
 FRONTEND_URL=http://localhost:5173
 ```
 
-### 4. Running the Application
+### 4. Running the Applications
 
+#### Option A: Running from Sub-directories
 In terminal 1 (Backend):
 ```bash
-cd server
+cd backend
 npm run dev
 ```
 The server will start at `http://localhost:3001`.
 
 In terminal 2 (Frontend):
 ```bash
+cd frontend
 npm run dev
 ```
-The client will start at `http://localhost:5173` with automatic API proxying.
+The client will start at `http://localhost:5173` with automatic API proxying to `http://localhost:3001`.
+
+#### Option B: Running from Repository Root
+In terminal 1 (Backend):
+```bash
+npm run dev:backend
+```
+In terminal 2 (Frontend):
+```bash
+npm run dev:frontend
+```
 
 ---
 
 ## Verification & Testing Suites
 
-FOLVIRA includes dedicated automated test suites covering all functionality:
+FOLVIRA includes comprehensive regression and integration test suites located in `backend/tests/`:
 
-| Suite | Command | What It Verifies |
-|---|---|---|
-| **API Smoke** | `node server/test-api.js` | Basic authentication & session flow |
-| **Phase 6** | `npx tsx server/test-phase6.js` | Visual editor, overrides, section ordering, theme updates |
-| **Phase 7** | `npx tsx server/test-phase7.js` | Publishing flow, snapshot immutability, `/p/:slug` public routes |
-| **Phase 8** | `npx tsx server/test-phase8.js` | End-to-end multi-phase regression, accessibility, SEO |
-| **Phase 9** | `npx tsx server/test-phase9.js` | Health probes, security headers, CORS, size limits, NoSQL sanitization |
+| Suite | Command (from backend/) | Command (from root) | What It Verifies |
+|---|---|---|---|
+| **Smoke API** | `npm run test:smoke` | `npm run test:smoke` | Auth, profile CRUD, GitHub import, resume upload |
+| **Portfolio (Phase 5)** | `npm run test:portfolio` | `npm run test:portfolio` | Multi-portfolio CRUD, templates, themes, ownership isolation |
+| **Visual Editor (Phase 6)** | `npm run test:phase6` | `npm run test:phase6` | Live split-pane editor, drag reordering, custom overrides, immutability |
+| **Publishing (Phase 7)** | `npm run test:phase7` | `npm run test:phase7` | Static snapshots, unpublishing, slug collision protection, public access |
+| **SEO & Access (Phase 8)** | `npm run test:phase8` | `npm run test:phase8` | Public experience, OpenGraph/Twitter SEO tags, data redaction |
+| **Production (Phase 9)** | `npm run test:phase9` | `npm run test:phase9` | Security headers, CORS, size limits, NoSQL injection filter, /health |
+| **AI Intelligence (Phase 4)**| `npm run test:ai` | `npm run test:ai` | Quality scoring, headline generator, bio enhancement, mock fallbacks |
 
-### Running the Phase 9 Verification Suite:
-Ensure the server is running on port 3001, then execute:
-```bash
-cd server
-npx tsx test-phase9.js
-```
+*Note: The backend server must be running (`npm run dev` in `backend/`) before executing the test commands.*
 
 ---
 
 ## Production Build & Deployment Guide
 
-FOLVIRA is designed to be cloud-agnostic and deployable to any standard infrastructure (Docker, Render, Railway, Fly.io, AWS, DigitalOcean, Vercel).
+FOLVIRA is cloud-ready and easily deployable to AWS EC2, DigitalOcean Droplets, Render, Railway, or standard VPS providers.
 
-### 1. Building the Application
+### 1. Building the Applications
 
-**Frontend Build:**
+Build both frontend and backend from the root:
 ```bash
 npm run build
 ```
-Generates optimized, vendor-split static assets in the root `dist/` directory.
-
-**Backend Build:**
+Or build each independently:
 ```bash
-cd server
+# Frontend build
+cd frontend
 npm run build
-```
-Compiles TypeScript into pure JavaScript in `server/dist/`.
+# Outputs optimized static bundle to frontend/dist/
 
-### 2. Starting the Backend in Production
+# Backend build
+cd backend
+npm run build
+# Compiles TypeScript to backend/dist/
+```
+
+### 2. Running the Backend in Production
 ```bash
-cd server
+cd backend
 NODE_ENV=production npm start
 ```
-Executes `node dist/index.js`. Startup validation ensures all production requirements are satisfied before opening socket connections.
+Starts `dist/index.js`. Startup validation automatically confirms JWT secret strength and production configuration before opening network sockets.
 
-### 3. Health & Liveness Checks
-Configure container or load balancer health probes to hit:
-- `GET /health` (or `GET /api/health`)
+### 3. Production Deployment Architecture (AWS EC2 + Nginx + PM2)
+
+In production, run the Express backend with **PM2** process manager and serve the Vite SPA and reverse-proxy API requests using **Nginx**:
+
+```text
+               Internet (Port 80/443)
+                         │
+                         ▼
+                   [ Nginx Reverse Proxy ]
+                   ├── /api/*   ──►  Proxy to Express Backend (http://127.0.0.1:3001)
+                   ├── /health  ──►  Proxy to Express Backend (http://127.0.0.1:3001/health)
+                   └── /*       ──►  Serve static frontend files from /var/www/folvira/frontend/dist
+```
+
+#### Sample Nginx Configuration (`/etc/nginx/sites-available/folvira`)
+```nginx
+server {
+    listen 80;
+    server_name folvira.co www.folvira.co;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name folvira.co www.folvira.co;
+
+    ssl_certificate /etc/letsencrypt/live/folvira.co/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/folvira.co/privkey.pem;
+
+    # Static Frontend SPA
+    root /var/www/folvira/frontend/dist;
+    index index.html;
+
+    # Gzip Compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # SPA Fallback: route everything to index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Backend API Reverse Proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Health Check Endpoint
+    location /health {
+        proxy_pass http://127.0.0.1:3001/health;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+#### Starting Backend with PM2:
+```bash
+cd /var/www/folvira/backend
+NODE_ENV=production pm2 start dist/index.js --name "folvira-api"
+pm2 save
+pm2 startup
+```
+
+### 4. Health & Liveness Checks
+The backend provides dedicated health probe endpoints at `/health` and `/api/health`:
 - Response: `200 OK`
 ```json
 {
@@ -327,37 +447,28 @@ Configure container or load balancer health probes to hit:
     "status": "ok",
     "database": "connected",
     "environment": "production",
-    "timestamp": "2026-09-13T01:40:00.000Z"
+    "timestamp": "2026-09-13T14:00:00.000Z"
   }
 }
 ```
-If MongoDB loses connection, the status transitions to `"degraded"` and returns HTTP `503 Service Unavailable`.
-
-### 4. SPA Routing Configuration
-When deploying the frontend SPA to static hosts (Nginx, Netlify, Vercel, Cloudflare Pages), ensure all non-asset routes fallback to `/index.html`:
-- Standard route: `/dashboard`, `/portfolio/:id` -> `index.html`
-- Public portfolio route: `/p/:slug` -> `index.html`
+If the database connection degrades, status returns `503 Service Unavailable`.
 
 ---
 
-## Security Policy & Deployment Architecture
+## Security Policy
 
-- **Deployment Topology**: FOLVIRA is architected for **Same-Site Deployment Topology** (Topology A). The frontend and backend reside under the same registrable site/domain (e.g., reverse proxy at `https://folvira.co` + `https://folvira.co/api`, or subdomains `https://app.folvira.co` + `https://api.folvira.co`). Cross-site deployment across separate third-party domains without a common parent site or reverse proxy is not supported with `SameSite=Lax`.
-- **Authentication & Cookies**: Stateless signed JWTs with expiration, delivered strictly via `HttpOnly`, `SameSite=Lax`, `Secure` (in production) cookies on `path: '/'`. Clearing cookies strictly mirrors these attributes.
-- **CORS**: Strictly locked to `FRONTEND_URL` with `credentials: true` — disallowing wildcard `*` origins and blocking unauthorized cross-origin requests.
-- **Content Security Policy (CSP)**: Explicit directives allowing only required resources:
+- **Topology**: Strictly designed for Same-Site topologies (e.g., `https://folvira.co` + `https://folvira.co/api`).
+- **Stateless Authentication**: Signed JWTs delivered exclusively via `HttpOnly`, `SameSite=Lax`, `Secure` (production) cookies on path `/`.
+- **CORS**: Locked strictly to `FRONTEND_URL` with `credentials: true`. Wildcards are disallowed.
+- **Content Security Policy (CSP)**: Strict Helmet configuration whitelist:
   - `default-src 'self'`
-  - `script-src 'self'` (strictly prohibits `'unsafe-eval'` and arbitrary remote scripts)
-  - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` (allows theme styling and Google Fonts stylesheets)
-  - `font-src 'self' https://fonts.gstatic.com data:` (allows Google Fonts font assets)
-  - `img-src 'self' data: blob: https:` (allows HTTPS profile photos, avatars, and local upload previews)
-  - `connect-src 'self' [FRONTEND_URL] [PUBLIC_ORIGIN]`
-  - `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`
-- **Password Security**: Passwords hashed with `bcryptjs` (salt rounds = 12).
-- **Token Protection**: Verification and reset tokens are hashed via `SHA-256` before database persistence to prevent offline token compromise.
-- **Defense-in-Depth Sanitization**: Strips MongoDB query operator keys (`$gt`, `$ne`, `$regex`) across body, query, and params.
-- **Security Headers**: Helmet suite enforcing `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Strict-Transport-Security`, `X-DNS-Prefetch-Control`, and explicit CSP.
-- **Zero Information Leakage**: Error handler intercepts 500 errors in production, generates a UUID `errorId` for log auditing, and returns a sanitized generic error message without stack traces or database error strings.
+  - `script-src 'self'` (no `unsafe-eval` or third-party script injection)
+  - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+  - `font-src 'self' https://fonts.gstatic.com data:`
+  - `img-src 'self' data: blob: https:`
+- **Password & Token Security**: Passwords hashed with `bcryptjs` (salt rounds = 12). Reset & verification tokens hashed with `SHA-256` before persistence.
+- **Defense-in-Depth Sanitization**: Recursive NoSQL injection sanitization removing MongoDB `$` operators from body, query, and params.
+- **Zero Information Leakage**: Error handling generates an audit UUID (`errorId`) for internal logs, withholding stack traces and database errors from clients.
 
 ---
 

@@ -16,7 +16,7 @@ function requireEnv(key: string): string {
   if (!value) {
     throw new Error(
       `[FOLVIRA] Missing required environment variable: ${key}\n` +
-        `  Copy server/.env.example to server/.env and fill in the values.`
+        `  Copy backend/.env.example to backend/.env and fill in the values.`
     )
   }
   return value
@@ -139,7 +139,7 @@ function validateProductionConfig(): void {
     throw new Error(
       `[FOLVIRA] Production configuration errors:\n` +
         errors.map((e) => `  ✗ ${e}`).join('\n') +
-        '\n\n  Fix the above issues in server/.env before starting in production mode.'
+        '\n\n  Fix the above issues in backend/.env before starting in production mode.'
     )
   }
 

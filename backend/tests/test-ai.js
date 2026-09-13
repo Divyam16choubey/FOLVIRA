@@ -13,8 +13,8 @@
  *   Phase 2 — Regression: signup, login, logout, /me, protected routes
  *   Phase 3 — Regression: profile CRUD, resume, GitHub, provenance, datasources
  *
- * Run: node test-ai.js
- * Server must be running: npm run dev (in server/)
+ * Run: npx tsx tests/test-ai.js
+ * Server must be running: npm run dev (in backend/)
  */
 
 // ─── State ────────────────────────────────────────────────────────────────────

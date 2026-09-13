@@ -1,5 +1,5 @@
 {
-  "name": "folvira-server",
+  "name": "folvira-backend",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
@@ -7,7 +7,15 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "tsx tests/test-api.js",
+    "test:ai": "tsx tests/test-ai.js",
+    "test:portfolio": "tsx tests/test-portfolio.js",
+    "test:phase6": "tsx tests/test-phase6.js",
+    "test:phase7": "tsx tests/test-phase7.js",
+    "test:phase8": "tsx tests/test-phase8.js",
+    "test:phase9": "tsx tests/test-phase9.js",
+    "test": "npm run test:phase9"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

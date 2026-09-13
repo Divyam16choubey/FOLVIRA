@@ -12,8 +12,8 @@
  *   Phase 3 — Regression: profile endpoints still work
  *   Phase 4 — Regression: AI endpoints still work
  *
- * Run: node test-portfolio.js
- * Server must be running: npm run dev (in server/)
+ * Run: npx tsx tests/test-portfolio.js
+ * Server must be running: npm run dev (in backend/)
  */
 
 const BASE = 'http://localhost:3001'
