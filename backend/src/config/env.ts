@@ -59,6 +59,10 @@ export const env = {
   EMAIL_FROM: optionalEnv('EMAIL_FROM', 'FOLVIRA <noreply@folvira.co>'),
   EMAIL_HOST: process.env['EMAIL_HOST'],
   EMAIL_PORT: parseInt(optionalEnv('EMAIL_PORT', '587'), 10),
+  EMAIL_SECURE:
+    process.env['EMAIL_SECURE'] !== undefined
+      ? process.env['EMAIL_SECURE'] === 'true'
+      : optionalEnv('EMAIL_PORT', '587') === '465',
   EMAIL_USER: process.env['EMAIL_USER'],
   EMAIL_PASS: process.env['EMAIL_PASS'],
 
@@ -78,7 +82,14 @@ export const env = {
     return this.NODE_ENV === 'test'
   },
   get isEmailConfigured() {
-    return !!(this.EMAIL_HOST && this.EMAIL_USER && this.EMAIL_PASS)
+    return !!(
+      this.EMAIL_HOST &&
+      this.EMAIL_HOST.trim().length > 0 &&
+      this.EMAIL_USER &&
+      this.EMAIL_USER.trim().length > 0 &&
+      this.EMAIL_PASS &&
+      this.EMAIL_PASS.trim().length > 0
+    )
   },
   get isAIConfigured() {
     return !!(this.AI_API_KEY && this.AI_API_KEY.length > 0)

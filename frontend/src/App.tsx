@@ -41,6 +41,11 @@ const PortfolioEditorPage = lazy(() => import('./pages/portfolio/PortfolioEditor
 // Public page
 const PublicPortfolioPage = lazy(() => import('./pages/public/PublicPortfolioPage').then(m => ({ default: m.PublicPortfolioPage })))
 
+// Content & Legal pages
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
+const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
+const TermsPage = lazy(() => import('./pages/legal/TermsPage').then(m => ({ default: m.TermsPage })))
+
 // ─── Suspense fallback ───────────────────────────────────────────────────────
 function LoadingFallback() {
   return (
@@ -171,6 +176,13 @@ function App() {
              * Draft data is NEVER rendered here.
              */}
             <Route path="/p/:slug" element={<PublicPortfolioPage />} />
+
+            {/*
+             * ── Content & Legal routes ─────────────────────────────────────
+             */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
             {/* 404 — redirect to landing */}
             <Route

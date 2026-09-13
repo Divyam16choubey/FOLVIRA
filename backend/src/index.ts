@@ -14,6 +14,7 @@ import { env } from './config/env'
 import { logger } from './config/logger'
 import { connectDB, disconnectDB } from './config/db'
 import { createApp } from './app'
+import { verifyEmailTransporter } from './services/email.service'
 
 let server: http.Server | null = null
 let isShuttingDown = false
@@ -24,16 +25,15 @@ async function start() {
 
   const app = createApp()
 
-  server = app.listen(env.PORT, () => {
+  server = app.listen(env.PORT, async () => {
     logger.info('Server', `FOLVIRA API running on http://localhost:${env.PORT}`)
     logger.info('Server', `Environment: ${env.NODE_ENV}`)
-    if (!env.isEmailConfigured) {
-      logger.warn(
-        'Server',
-        'Email provider not configured. Verification and reset emails will not be sent. ' +
-          'Set EMAIL_HOST, EMAIL_USER, EMAIL_PASS in backend/.env'
-      )
-    }
+    // Safely verify SMTP configuration (non-fatal, non-blocking)
+    await verifyEmailTransporter().catch((err) => {
+      logger.warn('Server', 'Non-fatal error checking email transporter', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    })
   })
 }
 

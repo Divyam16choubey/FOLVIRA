@@ -56,14 +56,8 @@ export async function signup(
 
     const { user, verificationToken } = await createUser({ name, email, password })
 
-    // Send verification email — if email isn't configured, log and continue
-    if (env.isEmailConfigured) {
-      await sendVerificationEmail(user.email, user.name, verificationToken)
-    } else {
-      console.warn(
-        `[Auth] Email not configured — verification token for ${user.email}: ${verificationToken}`
-      )
-    }
+    // Send verification email (returns EmailResult: success, skipped, or failed)
+    const emailResult = await sendVerificationEmail(user.email, user.name, verificationToken)
 
     // Issue access token cookie
     const token = signAccessToken(user._id.toString())
@@ -73,7 +67,7 @@ export async function signup(
       success: true,
       data: {
         user: toSafeUser(user),
-        emailVerificationSent: env.isEmailConfigured,
+        emailVerificationSent: emailResult.success,
       },
     })
   } catch (err) {
@@ -205,19 +199,24 @@ export async function resendVerification(
     const verificationToken = user.setEmailVerificationToken()
     await user.save()
 
-    if (env.isEmailConfigured) {
-      await sendVerificationEmail(user.email, user.name, verificationToken)
-    } else {
-      console.warn(
-        `[Auth] Email not configured — new verification token for ${user.email}: ${verificationToken}`
-      )
+    const emailResult = await sendVerificationEmail(user.email, user.name, verificationToken)
+
+    let message = 'Verification email sent. Please check your inbox.'
+    if (!emailResult.success) {
+      if (emailResult.skipped) {
+        message = env.isDevelopment
+          ? 'Email service is not configured. In development, check server logs for the verification link.'
+          : 'Email service is currently unavailable. Please try again later.'
+      } else {
+        message = 'Failed to deliver verification email. Please try again later.'
+      }
     }
 
     res.json({
       success: true,
       data: {
-        message: 'Verification email sent',
-        emailVerificationSent: env.isEmailConfigured,
+        message,
+        emailVerificationSent: emailResult.success,
       },
     })
   } catch (err) {
@@ -254,13 +253,7 @@ export async function forgotPassword(
         const resetToken = user.setPasswordResetToken()
         await user.save()
 
-        if (env.isEmailConfigured) {
-          await sendPasswordResetEmail(user.email, user.name, resetToken)
-        } else {
-          console.warn(
-            `[Auth] Email not configured — reset token for ${user.email}: ${resetToken}`
-          )
-        }
+        await sendPasswordResetEmail(user.email, user.name, resetToken)
       }
     } catch (dbErr) {
       // Swallow DB/email errors — never expose them to prevent enumeration

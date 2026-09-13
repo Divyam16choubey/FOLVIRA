@@ -9,23 +9,46 @@
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { navigation } from '../../data/landing'
 import { scrollToSection } from '../../lib/scroll'
 import { Button } from '../common/Button'
 import { CloseIcon, MenuIcon } from '../common/Icons'
+import { PricingModal } from '../common/PricingModal'
 import { useAuth } from '../../context/AuthContext'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isPricingOpen, setIsPricingOpen] = useState(false)
   const reducedMotion = useReducedMotion()
   const firstMenuItemRef = useRef<HTMLButtonElement>(null)
   const { user, isAuthenticated, isLoading, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
+      scrollToSection('top')
+    } else {
+      navigate('/')
+    }
+  }
+
+  const handleNavClick = (target: string) => {
+    if (location.pathname === '/') {
+      scrollToSection(target)
+    } else {
+      navigate(`/#${target}`)
+    }
+  }
 
   const closeAndScroll = (target: string) => {
     setIsOpen(false)
-    scrollToSection(target)
+    if (location.pathname === '/') {
+      scrollToSection(target)
+    } else {
+      navigate(`/#${target}`)
+    }
   }
 
   useEffect(() => {
@@ -67,7 +90,7 @@ export function Navbar() {
       >
         {/* Wordmark — scrolls to top on landing, links to / otherwise */}
         <button
-          onClick={() => scrollToSection('top')}
+          onClick={handleLogoClick}
           className="font-display text-[1.82rem] leading-none tracking-[-0.06em] text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine sm:text-[2rem]"
           aria-label="FOLVIRA home"
         >
@@ -80,7 +103,15 @@ export function Navbar() {
             item.target ? (
               <button
                 key={item.label}
-                onClick={() => scrollToSection(item.target!)}
+                onClick={() => handleNavClick(item.target!)}
+                className="text-sm font-bold text-ink transition-colors hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+              >
+                {item.label}
+              </button>
+            ) : item.label === 'Pricing' ? (
+              <button
+                key={item.label}
+                onClick={() => setIsPricingOpen(true)}
                 className="text-sm font-bold text-ink transition-colors hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
               >
                 {item.label}
@@ -163,6 +194,17 @@ export function Navbar() {
                   >
                     {item.label}
                   </button>
+                ) : item.label === 'Pricing' ? (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      setIsOpen(false)
+                      setIsPricingOpen(true)
+                    }}
+                    className="py-3 text-left text-base font-bold text-ink transition-colors hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+                  >
+                    {item.label}
+                  </button>
                 ) : (
                   <span
                     key={item.label}
@@ -218,6 +260,12 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pricing Modal */}
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+      />
     </header>
   )
 }
