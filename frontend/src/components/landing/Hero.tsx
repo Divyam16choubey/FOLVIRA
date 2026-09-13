@@ -18,7 +18,13 @@ export function Hero() {
             Turn the experience you already have into a considered portfolio that feels unmistakably yours.
           </motion.p>
           <motion.div initial={reducedMotion ? false : { opacity: 0, y: 14 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.55, delay: 0.34 }} className="mt-8 flex flex-col gap-3">
-            <Button onClick={() => scrollToSection('templates')} showArrow className="px-6 py-3.5">Create my portfolio</Button>
+            <Button
+              onClick={() => scrollToSection('templates')}
+              showArrow
+              className="px-6 py-3.5 bg-pine text-white hover:bg-[#183d35] hover:text-white focus:bg-[#183d35] focus:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine active:bg-[#122e28] active:text-white"
+            >
+              Create my portfolio
+            </Button>
             <Button onClick={() => scrollToSection('how-it-works')} variant="secondary" className="px-6 py-3.5"><PlayIcon size={18} /> See how it works</Button>
           </motion.div>
           <motion.div initial={reducedMotion ? false : { opacity: 0 }} animate={reducedMotion ? undefined : { opacity: 1 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.6, delay: 0.5 }} className="mt-10 flex items-center gap-4">

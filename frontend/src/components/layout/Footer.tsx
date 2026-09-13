@@ -21,7 +21,7 @@ export function Footer() {
           </div>)}
         </div>
       </div>
-      <div className="section-shell border-t border-ink/10 py-5 text-xs text-muted">© {new Date().getFullYear()} FOLVIRA. Phase 1 preview.</div>
+      <div className="section-shell border-t border-ink/10 py-5 text-xs text-muted">© 2026 FOLVIRA. All rights reserved.</div>
     </footer>
   )
 }

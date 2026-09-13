@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ children, variant = 'primary', showArrow = false, className = '', type = 'button', ...props }: ButtonProps) {
   const styles = {
-    primary: 'bg-pine text-white hover:bg-[var(--color-pine-deep)] focus-visible:outline-pine',
+    primary: 'bg-pine text-white hover:bg-[#183d35] hover:text-white focus-visible:bg-[#183d35] focus-visible:text-white focus-visible:outline-pine active:bg-[#122e28] active:text-white',
     secondary: 'border border-ink/20 bg-paper text-ink hover:border-pine/55 hover:bg-white focus-visible:outline-pine',
     quiet: 'text-ink hover:text-pine focus-visible:outline-pine',
   }
