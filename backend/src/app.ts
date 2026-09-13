@@ -51,6 +51,9 @@ export const productionCspDirectives = {
 export function createApp() {
   const app = express()
 
+  // ── Trust reverse proxy (Nginx forwards real client IPs for rate limiting) ─
+  app.set('trust proxy', 1)
+
   // ── Disable x-powered-by (defense-in-depth, also handled by helmet) ────────
   app.disable('x-powered-by')
 

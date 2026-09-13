@@ -359,28 +359,56 @@ npm run build
 # Compiles TypeScript to backend/dist/
 ```
 
-### 2. Running the Backend in Production
-```bash
-cd backend
-NODE_ENV=production npm start
+### 2. Required Production Backend Environment Variables
+
+In production, create `/var/www/folvira/backend/.env` containing:
+
+```dotenv
+NODE_ENV=production
+PORT=3001
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/folvira?retryWrites=true&w=majority
+JWT_SECRET=replace_with_a_secure_random_64_character_hex_string_generated_for_production
+FRONTEND_URL=https://your-domain.com
+PUBLIC_ORIGIN=https://your-domain.com
 ```
-Starts `dist/index.js`. Startup validation automatically confirms JWT secret strength and production configuration before opening network sockets.
 
-### 3. Production Deployment Architecture (AWS EC2 + Nginx + PM2)
+> [!IMPORTANT]
+> - `NODE_ENV=production`: Activates strict startup validation, NoSQL sanitization, rate limiters, and secure cookies.
+> - `JWT_SECRET`: Must be $\ge 32$ characters. Startup will fail fast if a default or weak pattern is detected.
+> - `FRONTEND_URL`: Must match your deployed public origin (`https://your-domain.com`). It must **not** contain `localhost` or `127.0.0.1` in production.
+> - `PUBLIC_ORIGIN`: Canonical public domain used for shareable portfolio links (`/p/:slug`).
 
-In production, run the Express backend with **PM2** process manager and serve the Vite SPA and reverse-proxy API requests using **Nginx**:
+### 3. HTTPS & Production Cookie Requirement
+
+FOLVIRA uses stateless JWT sessions stored in HTTP cookies with the following security policy:
+- `httpOnly: true` (prevents client JavaScript from reading the session token)
+- `secure: true` in production (enforced when `NODE_ENV=production`)
+- `sameSite: 'lax'` (protects against CSRF while enabling same-origin navigation)
+- `path: '/'`
+
+> [!WARNING]
+> Because `secure: true` is enforced in production mode, modern web browsers will **reject and refuse to persist** authentication cookies over unencrypted plain HTTP connections.
+>
+> **Do not test authentication flows through raw HTTP URLs such as `http://EC2_PUBLIC_IP`** until HTTPS (SSL/TLS certificate via Let's Encrypt / Certbot) is fully configured on your domain. Testing over plain HTTP with `NODE_ENV=production` will cause login/signup cookies to be discarded by the browser.
+
+### 4. Production Deployment Architecture (AWS EC2 + Nginx + PM2)
+
+In production on a single AWS EC2 instance:
+- **Nginx** handles TLS termination (HTTPS), serves pre-built frontend static files from `frontend/dist/`, and reverse-proxies `/api` and `/health` to the Express backend on `127.0.0.1:3001`.
+- **Express Backend** runs on `127.0.0.1:3001` managed by **PM2** with `trust proxy` enabled to correctly parse client IPs from Nginx `X-Forwarded-For` headers.
 
 ```text
-               Internet (Port 80/443)
-                         │
-                         ▼
-                   [ Nginx Reverse Proxy ]
-                   ├── /api/*   ──►  Proxy to Express Backend (http://127.0.0.1:3001)
-                   ├── /health  ──►  Proxy to Express Backend (http://127.0.0.1:3001/health)
-                   └── /*       ──►  Serve static frontend files from /var/www/folvira/frontend/dist
+               Internet (Port 80/443 HTTPS)
+                          │
+                          ▼
+                    [ Nginx Reverse Proxy ]
+                    ├── /api     ──►  Proxy to Express Backend (http://127.0.0.1:3001/api...)
+                    ├── /health  ──►  Proxy to Express Backend (http://127.0.0.1:3001/health)
+                    └── /*       ──►  Serve static SPA from /var/www/folvira/frontend/dist
 ```
 
 #### Sample Nginx Configuration (`/etc/nginx/sites-available/folvira`)
+
 ```nginx
 server {
     listen 80;
@@ -403,41 +431,67 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
-    # SPA Fallback: route everything to index.html
+    # SPA Fallback: route client-side paths to index.html
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    # Backend API Reverse Proxy
-    location /api/ {
+    # Backend API Reverse Proxy (handles both /api and /api/...)
+    location /api {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Forwarded-Host $host;
     }
 
     # Health Check Endpoint
     location /health {
         proxy_pass http://127.0.0.1:3001/health;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
 
-#### Starting Backend with PM2:
+*Note on `proxy_pass http://127.0.0.1:3001;`: When `proxy_pass` has no trailing URI path, Nginx forwards the complete request URI (including `/api`) to the backend without truncation or duplication.*
+
+### 5. PM2 Process Management & Restart Persistence
+
+Run the compiled backend with PM2 to ensure auto-restart on crashes and persistence across server reboots:
+
 ```bash
+# Navigate to backend directory
 cd /var/www/folvira/backend
-NODE_ENV=production pm2 start dist/index.js --name "folvira-api"
+
+# Build TypeScript to dist/ (if not already built)
+npm run build
+
+# Start backend under PM2 in production mode
+NODE_ENV=production pm2 start dist/index.js --name "folvira-api" --time
+
+# Verify status and view structured logs
+pm2 status
+pm2 logs folvira-api --lines 50
+
+# Save PM2 process list for system reboot persistence
 pm2 save
+
+# Generate and configure systemd startup script (run the output command provided by PM2)
 pm2 startup
 ```
 
-### 4. Health & Liveness Checks
+To reload or restart after code updates:
+```bash
+pm2 restart folvira-api
+```
+
+### 6. Health & Liveness Checks
 The backend provides dedicated health probe endpoints at `/health` and `/api/health`:
 - Response: `200 OK`
 ```json
