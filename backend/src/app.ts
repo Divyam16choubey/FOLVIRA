@@ -30,23 +30,49 @@ import publicRoutes from './routes/public.routes'
 // ── Explicit Content Security Policy (CSP) ─────────────────────────────────
 // Whitelists only the resources genuinely required by FOLVIRA.
 // Does NOT allow wildcard *, unsafe-eval, or arbitrary external scripts.
-export const productionCspDirectives = {
-  defaultSrc: ["'self'"],
-  scriptSrc: ["'self'"],
-  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-  fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-  imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-  connectSrc: [
-    "'self'",
-    ...(env.FRONTEND_URL ? [env.FRONTEND_URL] : []),
-    ...(env.PUBLIC_ORIGIN ? [env.PUBLIC_ORIGIN] : []),
-  ].filter(Boolean),
-  objectSrc: ["'none'"],
-  baseUri: ["'self'"],
-  formAction: ["'self'"],
-  frameAncestors: ["'self'"],
-  ...(env.isProduction ? { upgradeInsecureRequests: [] } : {}),
+
+/**
+ * Determines whether the deployment is configured to run over HTTPS.
+ * Inspects COOKIE_SECURE, PUBLIC_ORIGIN, and FRONTEND_URL.
+ */
+export function isHttpsDeployment(): boolean {
+  if (env.COOKIE_SECURE === false) {
+    return false
+  }
+  if (env.PUBLIC_ORIGIN && env.PUBLIC_ORIGIN.trim().toLowerCase().startsWith('http://')) {
+    return false
+  }
+  if (env.FRONTEND_URL && env.FRONTEND_URL.trim().toLowerCase().startsWith('http://')) {
+    return false
+  }
+  const candidate = (env.PUBLIC_ORIGIN || env.FRONTEND_URL || '').trim().toLowerCase()
+  return candidate.startsWith('https://')
 }
+
+export function getProductionCspDirectives() {
+  const isHttps = isHttpsDeployment()
+  return {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+    imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+    connectSrc: [
+      "'self'",
+      ...(env.FRONTEND_URL ? [env.FRONTEND_URL] : []),
+      ...(env.PUBLIC_ORIGIN ? [env.PUBLIC_ORIGIN] : []),
+    ].filter(Boolean),
+    objectSrc: ["'none'"],
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+    frameAncestors: ["'self'"],
+    ...(env.isProduction && isHttps
+      ? { upgradeInsecureRequests: [] }
+      : { upgradeInsecureRequests: null }),
+  }
+}
+
+export const productionCspDirectives = getProductionCspDirectives()
 
 export function createApp() {
   const app = express()
@@ -61,7 +87,7 @@ export function createApp() {
   app.use(
     helmet({
       contentSecurityPolicy: {
-        directives: productionCspDirectives,
+        directives: getProductionCspDirectives(),
       },
     })
   )

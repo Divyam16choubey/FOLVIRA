@@ -16,6 +16,7 @@
     "test:phase8": "tsx tests/test-phase8.js",
     "test:phase9": "tsx tests/test-phase9.js",
     "test:email": "tsx tests/test-email.ts",
+    "test:cookie": "tsx tests/test-cookie-security.ts",
     "test": "npm run test:phase9"
   },
   "dependencies": {

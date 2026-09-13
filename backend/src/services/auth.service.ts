@@ -53,7 +53,7 @@ export function cookieOptions(): {
   const sevenDays = 7 * 24 * 60 * 60 * 1000
   return {
     httpOnly: true,
-    secure: env.isProduction,
+    secure: env.COOKIE_SECURE,
     sameSite: 'lax',
     maxAge: sevenDays,
     path: '/',
@@ -71,7 +71,7 @@ export function clearCookieOptions(): {
 } {
   return {
     httpOnly: true,
-    secure: env.isProduction,
+    secure: env.COOKIE_SECURE,
     sameSite: 'lax',
     path: '/',
   }

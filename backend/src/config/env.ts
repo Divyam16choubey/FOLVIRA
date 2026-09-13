@@ -26,6 +26,48 @@ function optionalEnv(key: string, fallback: string): string {
   return process.env[key] ?? fallback
 }
 
+/**
+ * Safely parses an optional environment variable as a boolean.
+ * Returns true for 'true' or '1', false for 'false' or '0' (trimmed, case-insensitive).
+ * Returns undefined if omitted, empty, or unparseable.
+ */
+export function parseOptionalBoolean(key: string): boolean | undefined {
+  const value = process.env[key]
+  if (value === undefined || value.trim() === '') {
+    return undefined
+  }
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'true' || normalized === '1') {
+    return true
+  }
+  if (normalized === 'false' || normalized === '0') {
+    return false
+  }
+  return undefined
+}
+
+/**
+ * Resolves the cookie security setting.
+ * When COOKIE_SECURE is explicitly set, parses it as a boolean.
+ * When omitted or unparseable, defaults to isProduction (preserving HTTPS behavior).
+ */
+export function resolveCookieSecure(
+  cookieSecureRaw: string | undefined = process.env['COOKIE_SECURE'],
+  isProd: boolean = (process.env['NODE_ENV'] ?? 'development') === 'production'
+): boolean {
+  if (cookieSecureRaw === undefined || cookieSecureRaw.trim() === '') {
+    return isProd
+  }
+  const normalized = cookieSecureRaw.trim().toLowerCase()
+  if (normalized === 'true' || normalized === '1') {
+    return true
+  }
+  if (normalized === 'false' || normalized === '0') {
+    return false
+  }
+  return isProd
+}
+
 // ─── Weak-secret blocklist ────────────────────────────────────────────────────
 // These patterns are checked in production to reject placeholder or weak secrets.
 const WEAK_JWT_PATTERNS = [
@@ -50,10 +92,14 @@ export const env = {
   JWT_EXPIRES_IN: optionalEnv('JWT_EXPIRES_IN', '7d'),
 
   // App URL (used in email links and CORS)
-  FRONTEND_URL: optionalEnv('FRONTEND_URL', 'http://localhost:5173'),
+  get FRONTEND_URL(): string {
+    return process.env['FRONTEND_URL'] ?? 'http://localhost:5173'
+  },
 
   // Public origin (used in deployment docs and HSTS context)
-  PUBLIC_ORIGIN: process.env['PUBLIC_ORIGIN'],
+  get PUBLIC_ORIGIN(): string | undefined {
+    return process.env['PUBLIC_ORIGIN']
+  },
 
   // Email — optional at startup (verified before sending)
   EMAIL_FROM: optionalEnv('EMAIL_FROM', 'FOLVIRA <noreply@folvira.co>'),
@@ -73,13 +119,13 @@ export const env = {
   AI_MODEL: optionalEnv('AI_MODEL', 'gpt-4o-mini'),
 
   get isProduction() {
-    return this.NODE_ENV === 'production'
+    return (process.env['NODE_ENV'] ?? this.NODE_ENV) === 'production'
   },
   get isDevelopment() {
-    return this.NODE_ENV === 'development'
+    return (process.env['NODE_ENV'] ?? this.NODE_ENV) === 'development'
   },
   get isTest() {
-    return this.NODE_ENV === 'test'
+    return (process.env['NODE_ENV'] ?? this.NODE_ENV) === 'test'
   },
   get isEmailConfigured() {
     return !!(
@@ -93,6 +139,13 @@ export const env = {
   },
   get isAIConfigured() {
     return !!(this.AI_API_KEY && this.AI_API_KEY.length > 0)
+  },
+
+  // Cookie security — optional
+  // Overrides secure cookie flag. When omitted, defaults to env.isProduction.
+  // Set to false for temporary HTTP deployments; true for HTTPS production.
+  get COOKIE_SECURE(): boolean {
+    return resolveCookieSecure(process.env['COOKIE_SECURE'], this.isProduction)
   },
 } as const
 
