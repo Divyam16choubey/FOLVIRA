@@ -18,6 +18,7 @@
 process.env.NODE_ENV = 'test'
 
 import type { AddressInfo } from 'node:net'
+import type { Server } from 'node:http'
 import type { Transporter } from 'nodemailer'
 import {
   verifyEmailTransporter,
@@ -28,9 +29,9 @@ import {
   resetTransporter,
   isEmailConfigured,
 } from '../src/services/email.service'
-import { env } from '../src/config/env'
 import { createApp } from '../src/app'
 import { connectDB, disconnectDB } from '../src/config/db'
+import { User } from '../src/models/User'
 
 let passCount = 0
 let failCount = 0
@@ -97,7 +98,7 @@ async function run() {
     let lastSentMail: any = null
 
     const mockTransporter: Partial<Transporter> = {
-      verify: async () => true,
+      verify: async (): Promise<true> => true,
       sendMail: async (mailOptions: any) => {
         lastSentMail = mailOptions
         return {
@@ -114,7 +115,7 @@ async function run() {
 
     const sendVerifMock = await sendVerificationEmail(
       'alice@example.com',
-      'Alice Smith',
+      'Alice <script>alert("xss")</script> Smith',
       'secure-token-abc'
     )
     ok('sendVerificationEmail returns success=true with mock transporter', sendVerifMock.success === true)
@@ -124,7 +125,10 @@ async function run() {
     ok('Email "subject" contains verification', lastSentMail?.subject?.includes('Verify'))
     ok('Email "html" contains verifyUrl with token', lastSentMail?.html?.includes('token=secure-token-abc'))
     ok('Email "text" contains verifyUrl with token', lastSentMail?.text?.includes('token=secure-token-abc'))
-    ok('Email HTML escapes user name against XSS', !lastSentMail?.html?.includes('<script>'))
+    ok(
+      'Email HTML escapes user name against XSS',
+      !lastSentMail?.html?.includes('<script>') && lastSentMail?.html?.includes('&lt;script&gt;')
+    )
 
     const sendResetMock = await sendPasswordResetEmail(
       'bob@example.com',
@@ -143,7 +147,7 @@ async function run() {
     section('3. Delivery Failure Handling')
 
     const failingTransporter: Partial<Transporter> = {
-      verify: async () => true,
+      verify: async (): Promise<true> => true,
       sendMail: async () => {
         throw new Error('554 5.7.1 Relay access denied / SMTP timeout')
       },
@@ -174,7 +178,7 @@ async function run() {
     section('4. Transporter Verification Failure Handling')
 
     const brokenTransporter: Partial<Transporter> = {
-      verify: async () => {
+      verify: async (): Promise<true> => {
         throw new Error('535 5.7.8 Authentication credentials invalid')
       },
     }
@@ -197,9 +201,14 @@ async function run() {
 
     // Start in-memory test server on an ephemeral port (port 0)
     const app = createApp()
-    const testServer = app.listen(0)
+    const testServer = await new Promise<Server>((resolve) => {
+      const server = app.listen(0, () => resolve(server))
+    })
     const testPort = (testServer.address() as AddressInfo).port
     const testBaseUrl = `http://localhost:${testPort}`
+
+    let unconfEmail = ''
+    let confEmail = ''
 
     try {
       // 6A. Test API behavior when SMTP is UNCONFIGURED
@@ -207,7 +216,7 @@ async function run() {
       setTransporterForTesting(null)
 
       const ts = Date.now()
-      const unconfEmail = `unconf_${ts}@folvira.test`
+      unconfEmail = `unconf_${ts}@folvira.test`
 
       const signupUnconfRes = await fetch(`${testBaseUrl}/api/auth/signup`, {
         method: 'POST',
@@ -255,7 +264,7 @@ async function run() {
       // 6B. Test API behavior when SMTP is CONFIGURED WITH MOCK TRANSPORTER
       let mockApiSentMail: any = null
       const apiMockTransporter: Partial<Transporter> = {
-        verify: async () => true,
+        verify: async (): Promise<true> => true,
         sendMail: async (mailOptions: any) => {
           mockApiSentMail = mailOptions
           return {
@@ -268,7 +277,7 @@ async function run() {
       setConfigOverrideForTesting(true)
       setTransporterForTesting(apiMockTransporter as Transporter)
 
-      const confEmail = `conf_${ts}@folvira.test`
+      confEmail = `conf_${ts}@folvira.test`
 
       const signupConfRes = await fetch(`${testBaseUrl}/api/auth/signup`, {
         method: 'POST',
@@ -325,8 +334,15 @@ async function run() {
       ok('Forgot-password response is safe', forgotBody.success === true)
       ok('Mock transporter received forgot-password reset email', mockApiSentMail?.to === confEmail)
     } finally {
+      // Clean up test users created during Section 6
+      const cleanupEmails = [unconfEmail, confEmail].filter(Boolean)
+      if (cleanupEmails.length > 0) {
+        await User.deleteMany({ email: { $in: cleanupEmails } }).catch(() => {})
+      }
       // Clean up in-process server
-      testServer.close()
+      await new Promise<void>((resolve) => {
+        testServer.close(() => resolve())
+      })
     }
   } finally {
     // Reset test overrides and disconnect DB
