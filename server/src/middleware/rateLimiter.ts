@@ -16,24 +16,24 @@ const commonOptions = {
   },
 }
 
-/** Applied to login, signup, forgot-password: 10 attempts per 15 minutes per IP (50 in test) */
+/** Applied to login, signup, forgot-password: 10 attempts per 15 minutes per IP in production (100 in dev/test) */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env['NODE_ENV'] === 'test' ? 50 : 10,
+  max: process.env['NODE_ENV'] === 'production' ? 10 : 100,
   ...commonOptions,
 })
 
-/** Applied to resend-verification and reset-password: 5 per 15 minutes (50 in test) */
+/** Applied to resend-verification and reset-password: 5 per 15 minutes in production (50 in dev/test) */
 export const sensitiveActionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env['NODE_ENV'] === 'test' ? 50 : 5,
+  max: process.env['NODE_ENV'] === 'production' ? 5 : 50,
   ...commonOptions,
 })
 
-/** Applied to all /api routes as a general backstop: 100 per 15 minutes (1000 in test) */
+/** Applied to all /api routes as a general backstop: 100 per 15 minutes in production (1000 in dev/test) */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env['NODE_ENV'] === 'test' ? 1000 : 100,
+  max: process.env['NODE_ENV'] === 'production' ? 100 : 1000,
   ...commonOptions,
 })
 
@@ -45,7 +45,7 @@ export const generalLimiter = rateLimit({
  */
 export const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,   // 1 hour
-  max: process.env['NODE_ENV'] === 'test' ? 500 : 20,
+  max: process.env['NODE_ENV'] === 'production' ? 20 : 500,
   ...commonOptions,
   message: {
     success: false,
@@ -66,11 +66,11 @@ export const suggestionActionLimiter = rateLimit({
 /**
  * Phase 6: Applied to portfolio publish operations.
  * Publishing is expensive (profile resolution, snapshot creation).
- * 10 publishes per hour per IP is generous for legitimate use.
+ * 10 publishes per hour per IP in production (200 in dev/test).
  */
 export const publishLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: process.env['NODE_ENV'] === 'test' ? 200 : 10,
+  max: process.env['NODE_ENV'] === 'production' ? 10 : 200,
   ...commonOptions,
   message: {
     success: false,
@@ -81,13 +81,13 @@ export const publishLimiter = rateLimit({
 /**
  * Phase 7: Applied to public portfolio read endpoints.
  * Public portfolios can be shared widely — this limit is generous.
- * 300 requests per 15 minutes per IP covers normal browsing/sharing.
+ * 300 requests per 15 minutes per IP covers normal browsing/sharing (2000 in dev/test).
  * Distributed rate limiting (Redis) can replace this in a future phase.
  * NOTE: Do NOT apply the authenticated generalLimiter to public routes.
  */
 export const publicReadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env['NODE_ENV'] === 'test' ? 2000 : 300,
+  max: process.env['NODE_ENV'] === 'production' ? 300 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

@@ -936,11 +936,14 @@ export async function getPublishedPortfolioBySlug(
     return null
   }
 
+  // Phase 9: .lean() for performance — this is a read-only public endpoint.
+  // Skips Mongoose document hydration for faster serialization.
   return Portfolio.findOne({
     slug: normalizedSlug,
     status: 'published',
   })
-    .sort({ createdAt: 1 }) // Deterministic: original published portfolio is preserved if legacy duplicate exists
+    .lean()
+    .sort({ createdAt: 1 }) as Promise<IPortfolio | null> // lean returns POJO, cast is safe for read-only
 }
 
 // ─── Phase 7: Unpublish ───────────────────────────────────────────────────────

@@ -26,11 +26,26 @@ export function signAccessToken(userId: string): string {
   })
 }
 
-/** Returns the cookie options object — secure in production, lax for SPA. */
+/**
+ * Returns the cookie options object for issuing session cookies.
+ *
+ * Supported Deployment Topology:
+ * FOLVIRA supports Same-Site Deployment Topology (Topology A):
+ * - Frontend and backend are deployed under the same registrable domain / site
+ *   (e.g., via reverse proxy at `https://folvira.co` + `https://folvira.co/api`,
+ *   or subdomains `https://app.folvira.co` + `https://api.folvira.co`).
+ * - Under same-site topology, `SameSite=Lax` ensures cookies are transmitted on
+ *   same-site XHR/fetch requests and top-level navigations while providing strong
+ *   CSRF protection against untrusted third-party sites.
+ * - Note: True cross-site deployment across separate effective TLDs (e.g.
+ *   `app.vercel.app` and `api.onrender.com`) is not supported with SameSite=Lax
+ *   because modern browsers block Lax cookies on cross-site subresource requests.
+ *   For cross-site hosting, a reverse proxy or shared custom domain must be used.
+ */
 export function cookieOptions(): {
   httpOnly: boolean
   secure: boolean
-  sameSite: 'lax' | 'strict' | 'none'
+  sameSite: 'lax'
   maxAge: number
   path: string
 } {
@@ -41,6 +56,23 @@ export function cookieOptions(): {
     secure: env.isProduction,
     sameSite: 'lax',
     maxAge: sevenDays,
+    path: '/',
+  }
+}
+
+/**
+ * Returns matching cookie options for clearing the session cookie.
+ */
+export function clearCookieOptions(): {
+  httpOnly: boolean
+  secure: boolean
+  sameSite: 'lax'
+  path: string
+} {
+  return {
+    httpOnly: true,
+    secure: env.isProduction,
+    sameSite: 'lax',
     path: '/',
   }
 }

@@ -15,4 +15,16 @@ export default defineConfig({
       },
     },
   },
+  // Phase 9: Vendor chunk splitting to reduce initial bundle size.
+  // Complements route-level React.lazy() in App.tsx.
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['framer-motion'],
+        },
+      },
+    },
+  },
 })

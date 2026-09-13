@@ -20,6 +20,7 @@ import {
   resetUserPassword,
   signAccessToken,
   cookieOptions,
+  clearCookieOptions,
   toSafeUser,
 } from '../services/auth.service'
 import {
@@ -118,12 +119,7 @@ export async function logout(
 ): Promise<void> {
   try {
     // Clear the cookie server-side — this is real logout, not a client-side flag
-    res.clearCookie('access_token', {
-      httpOnly: true,
-      secure: env.isProduction,
-      sameSite: 'lax',
-      path: '/',
-    })
+    res.clearCookie('access_token', clearCookieOptions())
 
     res.json({ success: true, data: null })
   } catch (err) {
@@ -143,12 +139,7 @@ export async function getMe(
 
     if (!user || user.accountStatus !== 'active') {
       // Clear stale cookie
-      res.clearCookie('access_token', {
-        httpOnly: true,
-        secure: env.isProduction,
-        sameSite: 'lax',
-        path: '/',
-      })
+      res.clearCookie('access_token', clearCookieOptions())
       throw createError('User not found', 401)
     }
 
@@ -307,12 +298,7 @@ export async function resetPassword(
     await resetUserPassword(user, password)
 
     // Invalidate the current session — force re-login with new password
-    res.clearCookie('access_token', {
-      httpOnly: true,
-      secure: env.isProduction,
-      sameSite: 'lax',
-      path: '/',
-    })
+    res.clearCookie('access_token', clearCookieOptions())
 
     res.json({
       success: true,
@@ -340,12 +326,7 @@ export async function deleteAccount(
     await User.findByIdAndDelete(req.userId)
 
     // Invalidate session immediately
-    res.clearCookie('access_token', {
-      httpOnly: true,
-      secure: env.isProduction,
-      sameSite: 'lax',
-      path: '/',
-    })
+    res.clearCookie('access_token', clearCookieOptions())
 
     res.json({
       success: true,
